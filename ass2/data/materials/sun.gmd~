@@ -1,0 +1,10 @@
+
+{
+	"shading_model" : "Planet",
+	"uniforms" : 
+	{
+		"atmo_color" : "(0.500  0.500  1.000)",
+		"diffuse_map" : "data/objects/sun/Sun.jpg",
+		"shinyness" : "100"
+	}
+}

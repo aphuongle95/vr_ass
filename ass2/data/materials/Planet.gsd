@@ -1,0 +1,49 @@
+
+{
+	"final_shading_stage" : 
+	{
+		"body" : "vec3 diffuse = texture2D(diffuse_map, texcoords).rgb;\nfloat atmo = 1.0 - pow(max(0, dot(-gua_normal, normalize(gua_position - gua_camera_position))), 0.5);\n\ngua_color = diffuse * (diffuse_color + gua_ambient_color) + specular_intensity + atmo * atmo_color;",
+		"functions" : "",
+		"outputs" : null,
+		"uniforms" : 
+		{
+			"atmo_color" : "vec3",
+			"diffuse_map" : "sampler2D"
+		}
+	},
+	"gbuffer_fragment_stage" : 
+	{
+		"body" : "gua_normal = my_normal;\ntexcoords = my_texcoords;\n",
+		"functions" : "",
+		"outputs" : 
+		{
+			"texcoords" : "vec2"
+		},
+		"uniforms" : null
+	},
+	"gbuffer_vertex_stage" : 
+	{
+		"body" : "my_texcoords = gua_texcoords;\nmy_normal = gua_world_normal;\n\ngua_position = gua_world_position;\n",
+		"functions" : "",
+		"outputs" : 
+		{
+			"my_normal" : "vec3",
+			"my_texcoords" : "vec2"
+		},
+		"uniforms" : null
+	},
+	"lbuffer_stage" : 
+	{
+		"body" : "diffuse_color = pow(dot(gua_normal, gua_light_direction), 2.0) * gua_light_intensity * gua_light_color;\nspecular_intensity = pow(max(0, dot(reflect(gua_light_direction, gua_normal), normalize(gua_position - gua_camera_position))), shinyness) * gua_light_intensity;\n",
+		"functions" : "",
+		"outputs" : 
+		{
+			"diffuse_color" : "vec3",
+			"specular_intensity" : "float"
+		},
+		"uniforms" : 
+		{
+			"shinyness" : "float"
+		}
+	}
+}

@@ -1,0 +1,10 @@
+
+{
+	"shading_model" : "Planet.gsd",
+	"uniforms" :
+	{
+        "atmo_color" : "(0.100  0.100  0.100)",
+		"diffuse_map" : "data/textures/planets/Moon.jpg",
+		"shinyness" : "100"
+	}
+}
