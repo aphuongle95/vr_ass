@@ -14,14 +14,14 @@ class OrbitVisualization:
         ):
 
         if PARENT_NODE is None: # guard
-            print("ERROR: missing parameters")            
+            print("ERROR: missing parameters")
             return
 
         ### parameters ###
         self.number_of_segments = 100
-        self.screenspace_linewidth = 5 # in pixel
+        self.screenspace_linewidth = 3 # in pixel
         self.color = avango.gua.Color(1.0,1.0,1.0)
-        
+
         ## init geometry
         _loader = avango.gua.nodes.LineStripLoader()
 
@@ -38,6 +38,5 @@ class OrbitVisualization:
         for _i in range(self.number_of_segments+1):
             _pos = avango.gua.make_rot_mat(_i * (360.0 / self.number_of_segments), 0.0, 1.0, 0.0) * avango.gua.Vec3(ORBIT_RADIUS, 0.0, 0.0) # transform vector with rotation matrix
             self.linestrip_node.enqueue_vertex(_pos.x, _pos.y, _pos.z, self.color.r, self.color.g, self.color.b, 0.001)
-        
+
         self.linestrip_node.end_vertex_list()
-            

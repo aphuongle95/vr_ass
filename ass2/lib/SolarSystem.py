@@ -47,7 +47,7 @@ class SolarSystem(avango.script.Script):
             ORBIT_INCLINATION = 0.0,
             ORBIT_DURATION = 0.0,
             ROTATION_INCLINATION = 0.0,
-            ROTATION_DURATION = 0.0,
+            ROTATION_DURATION = SP.SUN_ROTATION_DURATION,
             )
 
         # init lightsource (only for sun)

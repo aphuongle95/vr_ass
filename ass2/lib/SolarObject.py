@@ -3,6 +3,7 @@
 ### import guacamole libraries ###
 import avango
 import avango.gua
+import math
 
 ### import framework libraries ###
 from lib.OrbitVisualization import OrbitVisualization
@@ -36,8 +37,15 @@ class SolarObject:
         self.orbit_radius = ORBIT_RADIUS
         self.rotation_inclination = ROTATION_INCLINATION
         self.orbit_inclination = ORBIT_INCLINATION
-        self.orbit_velocity = ROTATION_DURATION * 0.001
-        self.rotation_velocity = ORBIT_DURATION * 0.001
+        if  ORBIT_DURATION == 0:
+            self.orbit_velocity = ORBIT_DURATION
+        else:
+            self.orbit_velocity =  ORBIT_RADIUS / ORBIT_DURATION
+
+        if  ROTATION_DURATION == 0:
+            self.rotation_velocity = ROTATION_DURATION
+        else:
+            self.rotation_velocity = 1 / ROTATION_DURATION
 
 
         ### resources ###
