@@ -63,8 +63,13 @@ class Constraint(avango.script.Script):
         _head, _pitch, _roll = lib.Utilities.get_euler_angles(self.sf_mat.value)
 
         # ToDo: apply rotation constraints here
-        # self.sf_mat.value =
+        print(_head )
 
+        if(_head < self.min_angle):
+            self.sf_mat.value = avango.gua.make_identity_mat() * avango.gua.make_rot_mat(self.min_angle,0,1,0)
+
+        elif(_head > self.max_angle):
+            self.sf_mat.value = avango.gua.make_identity_mat() * avango.gua.make_rot_mat(self.max_angle,0,1,0)
 
 
 class Hinge:
@@ -81,6 +86,8 @@ class Hinge:
         HEIGHT = 0.1, # in meter
         ROT_OFFSET_MAT = avango.gua.make_identity_mat(), # the rotation offset relative to the parent coordinate system
         SF_ROT_INPUT = None,
+        MIN_ANGLE = -180,
+        MAX_ANGLE = 180.0,
         ):
 
         ## get unique id for this instance
@@ -110,11 +117,18 @@ class Hinge:
         self.acc.sf_mat.value = self.hinge_node.Transform.value # consider (potential) rotation offset
 
         # ToDo: init Constraint here
-        # ...
+        self.cst = Constraint()
+        self.cst.set_min_max_values(MIN_ANGLE, MAX_ANGLE)
 
         # ToDo: init field connections here
         # ...
-        # input of matrix hing_node transform is connected from output of accumulator (sf_mat)
+        # input of this matrix hing_node transform is connected from output of accumulator (sf_mat)
         self.hinge_node.Transform.connect_from(self.acc.sf_mat)
         # input of acc sf_rot_input is connected from output of this SF_ROT_INPUT
         self.acc.sf_rot_input.connect_from(SF_ROT_INPUT)
+
+        # input of sf_mat cst is conneted from output of sf_mat acc
+        self.cst.sf_mat.connect_from(self.acc.sf_mat)
+
+        # input of sf_mat acc is conneted from output of sf_mat cst
+        self.acc.sf_mat.connect_weak_from(self.cst.sf_mat)
