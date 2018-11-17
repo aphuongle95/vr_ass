@@ -29,9 +29,9 @@ class Accumulator(avango.script.Script):
     ## callback functions
     def evaluate(self):
         # perform update when fields change (with dependency evaluation)
-        print("accum eval")
+        # print("accum eval")
 
-        # ToDo: accumulate rotation input here
+        # TD: accumulate rotation input here
         self.sf_mat.value = self.sf_mat.value * avango.gua.make_rot_mat(self.sf_rot_input.value,0,1,0)
 
 class Constraint(avango.script.Script):
@@ -57,13 +57,12 @@ class Constraint(avango.script.Script):
     ## callback functions
     def evaluate(self):
         # perform update when fields change (with dependency evaluation)
-        print("const eval")
+        # print("const eval")
 
         # check and apply rotation constraints
         _head, _pitch, _roll = lib.Utilities.get_euler_angles(self.sf_mat.value)
 
-        # ToDo: apply rotation constraints here
-        print(_head )
+        # TD: apply rotation constraints here
 
         if(_head < self.min_angle):
             self.sf_mat.value = avango.gua.make_identity_mat() * avango.gua.make_rot_mat(self.min_angle,0,1,0)
@@ -116,11 +115,11 @@ class Hinge:
         self.acc = Accumulator()
         self.acc.sf_mat.value = self.hinge_node.Transform.value # consider (potential) rotation offset
 
-        # ToDo: init Constraint here
+        # TD: init Constraint here
         self.cst = Constraint()
         self.cst.set_min_max_values(MIN_ANGLE, MAX_ANGLE)
 
-        # ToDo: init field connections here
+        # TD: init field connections here
         # ...
         # input of this matrix hing_node transform is connected from output of accumulator (sf_mat)
         self.hinge_node.Transform.connect_from(self.acc.sf_mat)
