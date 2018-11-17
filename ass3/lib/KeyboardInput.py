@@ -66,17 +66,16 @@ class KeyboardInput(avango.script.Script):
 
     def evaluate(self): # perform update when fields change (with dependency evaluation)
 
-        # ToDo: calculate rotation input per frame that corresponds to given velocity (self.rot_velocity)
+        # TD: calculate rotation input per frame that corresponds to given velocity (self.rot_velocity)
         _rot_input = self.rot_velocity / self.sf_max_fps.value
 
-        # ToDo: adapt rotation input to varying frame rates
-        # time.time() # absolute timestamp
+        # TD: adapt rotation input to varying frame rates
+        time.time() # absolute timestamp
 
 
         ## update rot_value0
         if self.keyboardSensor.Button4.value == True: # KEY_LEFT
             self.sf_rot_input0.value = _rot_input * -1.0
-            print(_rot_input)
 
         elif self.keyboardSensor.Button5.value == True: # KEY_RIGHT
             self.sf_rot_input0.value = _rot_input
