@@ -14,9 +14,9 @@ import math
 
 class Accumulator(avango.script.Script):
 
-    ## declaration of fields        
-    sf_rot_input = avango.SFFloat()    
-    
+    ## declaration of fields
+    sf_rot_input = avango.SFFloat()
+
     sf_mat = avango.gua.SFMatrix4()
     sf_mat.value = avango.gua.make_identity_mat() # initialize field with identity matrix
 
@@ -30,14 +30,13 @@ class Accumulator(avango.script.Script):
     def evaluate(self):
         # perform update when fields change (with dependency evaluation)
         print("accum eval")
-        
-        # ToDo: accumulate rotation input here        
-        # self.sf_mat.value = 
 
+        # ToDo: accumulate rotation input here
+        self.sf_mat.value = self.sf_mat.value * avango.gua.make_rot_mat(self.sf_rot_input.value,0,1,0)
 
 class Constraint(avango.script.Script):
 
-    ## declaration of fields    
+    ## declaration of fields
     sf_mat = avango.gua.SFMatrix4()
     sf_mat.value = avango.gua.make_identity_mat() # initialize field with identity matrix
 
@@ -53,18 +52,18 @@ class Constraint(avango.script.Script):
     def set_min_max_values(self, MIN, MAX):
         self.min_angle = MIN
         self.max_angle = MAX
-    
+
 
     ## callback functions
     def evaluate(self):
         # perform update when fields change (with dependency evaluation)
         print("const eval")
-      
+
         # check and apply rotation constraints
         _head, _pitch, _roll = lib.Utilities.get_euler_angles(self.sf_mat.value)
 
-        # ToDo: apply rotation constraints here        
-        # self.sf_mat.value = 
+        # ToDo: apply rotation constraints here
+        # self.sf_mat.value =
 
 
 
@@ -73,7 +72,7 @@ class Hinge:
     ## class variables
 
     # Number of Hinge instances that have already been created.
-    number_of_instances = 0   
+    number_of_instances = 0
 
     # constructor
     def __init__(self,
@@ -92,7 +91,7 @@ class Hinge:
         ## scenegraph nodes
 
         self.hinge_rot_offset_node = avango.gua.nodes.TransformNode(Name = "hinge{0}_rot_offset_node".format(str(self.id)))
-        self.hinge_rot_offset_node.Transform.value = ROT_OFFSET_MAT # apply initial rotation offset 
+        self.hinge_rot_offset_node.Transform.value = ROT_OFFSET_MAT # apply initial rotation offset
         PARENT_NODE.Children.value.append(self.hinge_rot_offset_node)
 
         self.hinge_node = avango.gua.nodes.TransformNode(Name = "hinge{0}_node".format(str(self.id)))
@@ -108,11 +107,14 @@ class Hinge:
 
         ## sub-classes
         self.acc = Accumulator()
-        self.acc.sf_mat.value = self.hinge_node.Transform.value # consider (potential) rotation offset 
+        self.acc.sf_mat.value = self.hinge_node.Transform.value # consider (potential) rotation offset
 
         # ToDo: init Constraint here
         # ...
 
         # ToDo: init field connections here
         # ...
-        
+        # input of matrix hing_node transform is connected from output of accumulator (sf_mat)
+        self.hinge_node.Transform.connect_from(self.acc.sf_mat)
+        # input of acc sf_rot_input is connected from output of this SF_ROT_INPUT
+        self.acc.sf_rot_input.connect_from(SF_ROT_INPUT)
