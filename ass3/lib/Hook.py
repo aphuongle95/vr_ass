@@ -28,7 +28,7 @@ class Hook(avango.script.Script):
         self.TARGET_LIST = TARGET_LIST
 
 
-        # ToDo: init scenegraph node(s) here
+        # TD: init scenegraph node(s) here
         ## scenegraph nodes
 
         self.hook_node = avango.gua.nodes.TransformNode(Name = "hook_node")
@@ -41,6 +41,7 @@ class Hook(avango.script.Script):
         self.hook_geometry.Material.value.set_uniform("Color", avango.gua.Vec4(0.8,1.0,0.0,1.0))
         self.hook_node.Children.value.append(self.hook_geometry)
 
+        self.sf_mat.connect_from(self.hook_node.WorldTransform)
 
 
     ### callback functions ###
