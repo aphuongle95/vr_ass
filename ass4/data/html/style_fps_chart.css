@@ -1,0 +1,48 @@
+body {
+    background: rgba(0, 0, 0, 0.4);
+    font-family: DejaVu Sans Mono;
+    overflow: hidden;
+}
+
+html, body, svg {
+    padding: 0;
+    margin: 0;
+}
+
+path.dataline {
+    stroke-width: 2;
+    fill: none;
+}
+
+#line1 {
+    stroke: #FF9800;
+}
+
+#line2 {
+    stroke: #2196F3;
+}
+
+g.axis path,
+g.axis line {
+    stroke: rgba(255, 255, 255, 0.3);
+    stroke-width: 1;
+    fill: none;
+    shape-rendering: crispEdges;
+}
+
+.axis text {
+    font-size: 11px;
+    fill: #ccc;
+}
+
+text.label, text.numText {
+    text-anchor: end;
+}
+
+text#num1, text#label1 {
+    fill: #FF9800;
+}
+
+text#num2, text#label2 {
+    fill: #2196F3;
+}
