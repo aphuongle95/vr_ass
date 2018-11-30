@@ -171,7 +171,7 @@ class ManipulationManager(avango.script.Script):
 
 
     ##########################
-    ### Exercise 4.2
+    ### Exercise 4.1
     ##########################
 
     ## This function is called when the dragging button
@@ -196,7 +196,6 @@ class ManipulationManager(avango.script.Script):
         ## TODO: add code if necessary
         _hand_mat = self.hand_transform.WorldTransform.value
         for _node in self.dragged_objects_list:
-            inv_trans_mat = avango.gua.make_inverse_mat(avango.gua.make_trans_mat(_node.Transform.value.get_translate()))
             _node.Transform.value =  _hand_mat * _node.DraggingOffsetMatrix.value
 
 
@@ -418,10 +417,10 @@ class IsotonicPositionControlManipulation(Manipulation):
     ## implement respective base-class function
     def reset(self):
         self.sf_mat.value = avango.gua.make_identity_mat() # snap hand back to screen center
-
+        print("reset")
 
 ##########################
-### Exercise 4.3
+### Exercise 4.2
 ##########################
 
 class IsotonicRateControlManipulation(Manipulation):
@@ -433,18 +432,40 @@ class IsotonicRateControlManipulation(Manipulation):
         self.mf_dof.connect_from(MF_DOF)
         self.mf_buttons.connect_from(MF_BUTTONS)
 
+        self.mf_trans_prev = avango.gua.make_identity_mat()
 
     ## implement respective base-class function
     def manipulate(self):
         pass
         ## TODO: add code
+        _x = self.mf_dof.value[0]
+        _y = self.mf_dof.value[1]
+        _z = self.mf_dof.value[2]
 
+        _x *= 0.1
+        _y *= 0.1
+        _z *= 0.1
+
+        if _x != 0 or _y != 0 or _z != 0:
+            self.mf_trans = avango.gua.make_trans_mat(_x, _y, _z) * self.mf_trans_prev
+
+            self.mf_trans_prev = self.mf_trans
+
+            # accumulate input
+            _new_mat = self.mf_trans * self.sf_mat.value
+
+            # possibly clamp matrix (to screen space borders)
+            _new_mat = self.clamp_matrix(_new_mat)
+
+            self.sf_mat.value = _new_mat # apply new matrix to field
+
+            self.mf_dof_prev = self.mf_dof
 
     ## implement respective base-class function
     def reset(self):
         pass
         ## TODO: add code
-
+        self.sf_mat.value = avango.gua.make_identity_mat()
 
 
 class IsotonicAccelerationControlManipulation(Manipulation):
