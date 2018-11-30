@@ -432,34 +432,46 @@ class IsotonicRateControlManipulation(Manipulation):
         self.mf_dof.connect_from(MF_DOF)
         self.mf_buttons.connect_from(MF_BUTTONS)
 
-        self.mf_trans_prev = avango.gua.make_identity_mat()
+        self.mf_dof_prev = self.mf_dof
+        self.accum_v_x = 0
+        self.accum_v_y = 0
+        self.accum_v_z = 0
 
     ## implement respective base-class function
     def manipulate(self):
         pass
         ## TODO: add code
-        _x = self.mf_dof.value[0]
-        _y = self.mf_dof.value[1]
-        _z = self.mf_dof.value[2]
 
-        _x *= 0.1
-        _y *= 0.1
-        _z *= 0.1
+        # s2 = s1 + v_t * delta_t
+        # delta_t is a constant
+        # assume v_t at each time frame to be a constant
+        # v2 = v1 + delta_v
+        # delta_v is our input
 
-        if _x != 0 or _y != 0 or _z != 0:
-            self.mf_trans = avango.gua.make_trans_mat(_x, _y, _z) * self.mf_trans_prev
+        # if we move the mouse in a straight direction,
+        # it is easy to see that the velocity is increasing
 
-            self.mf_trans_prev = self.mf_trans
+        delta_v_x = self.mf_dof.value[0]
+        delta_v_y = self.mf_dof.value[1]
+        delta_v_z = self.mf_dof.value[2]
 
+        print(delta_v_x, delta_v_y, delta_v_z)
+
+        if delta_v_x == 0 and delta_v_y == 0 and delta_v_z == 0:
+            self.accum_v_x = 0
+            self.accum_v_y = 0
+            self.accum_v_z = 0
+        else:
+            self.accum_v_x += delta_v_x * 0.005
+            self.accum_v_y += delta_v_y * 0.005
+            self.accum_v_z += delta_v_z * 0.005
             # accumulate input
-            _new_mat = self.mf_trans * self.sf_mat.value
+            _new_mat = avango.gua.make_trans_mat(self.accum_v_x, self.accum_v_y, self.accum_v_z) * self.sf_mat.value
 
             # possibly clamp matrix (to screen space borders)
             _new_mat = self.clamp_matrix(_new_mat)
 
             self.sf_mat.value = _new_mat # apply new matrix to field
-
-            self.mf_dof_prev = self.mf_dof
 
     ## implement respective base-class function
     def reset(self):
