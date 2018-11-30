@@ -432,7 +432,6 @@ class IsotonicRateControlManipulation(Manipulation):
         self.mf_dof.connect_from(MF_DOF)
         self.mf_buttons.connect_from(MF_BUTTONS)
 
-        self.mf_dof_prev = self.mf_dof
         self.accum_v_x = 0
         self.accum_v_y = 0
         self.accum_v_z = 0
@@ -447,26 +446,29 @@ class IsotonicRateControlManipulation(Manipulation):
         # assume v_t at each time frame to be a constant
         # v2 = v1 + delta_v
         # delta_v is our input
+        # v_t is accumulated value of velocity
 
         # if we move the mouse in a straight direction,
         # it is easy to see that the velocity is increasing
 
-        delta_v_x = self.mf_dof.value[0]
-        delta_v_y = self.mf_dof.value[1]
-        delta_v_z = self.mf_dof.value[2]
-
-        print(delta_v_x, delta_v_y, delta_v_z)
+        delta_v_x = self.mf_dof.value[0] * 0.1 * 0.05
+        delta_v_y = self.mf_dof.value[1] * 0.1 * 0.05
+        delta_v_z = self.mf_dof.value[2] * 0.1 * 0.05
 
         if delta_v_x == 0 and delta_v_y == 0 and delta_v_z == 0:
             self.accum_v_x = 0
             self.accum_v_y = 0
             self.accum_v_z = 0
         else:
-            self.accum_v_x += delta_v_x * 0.005
-            self.accum_v_y += delta_v_y * 0.005
-            self.accum_v_z += delta_v_z * 0.005
+            self.accum_v_x += delta_v_x
+            self.accum_v_y += delta_v_y
+            self.accum_v_z += delta_v_z
+
+            _x = self.accum_v_x
+            _y = self.accum_v_y
+            _z = self.accum_v_z
             # accumulate input
-            _new_mat = avango.gua.make_trans_mat(self.accum_v_x, self.accum_v_y, self.accum_v_z) * self.sf_mat.value
+            _new_mat = avango.gua.make_trans_mat(_x, _y, _z) * self.sf_mat.value
 
             # possibly clamp matrix (to screen space borders)
             _new_mat = self.clamp_matrix(_new_mat)
@@ -489,12 +491,60 @@ class IsotonicAccelerationControlManipulation(Manipulation):
         self.mf_dof.connect_from(MF_DOF)
         self.mf_buttons.connect_from(MF_BUTTONS)
 
+        self.accum_v_x = 0
+        self.accum_v_y = 0
+        self.accum_v_z = 0
+
+        self.accum_a_x = 0
+        self.accum_a_y = 0
+        self.accum_a_z = 0
 
     ## implement respective base-class function
     def manipulate(self):
         pass
         ## TODO: add code
 
+        # s2 = s1 + v_t * delta_t
+        # delta_t is a constant
+        # v2 = v1 + delta_v
+        # v_t is accumulated value of velocity
+        # delta_v = a_t * t
+        # assume a_t at each time frame to be a constant
+        # a2 = a1 + delta_a
+        # delta_a is our input
+        # a_t is accumulated value of acceleration
+
+        delta_a_x = self.mf_dof.value[0] * 0.1 * 0.05 * 0.05
+        delta_a_y = self.mf_dof.value[1] * 0.1 * 0.05 * 0.05
+        delta_a_z = self.mf_dof.value[2] * 0.1 * 0.05 * 0.05
+
+        if delta_a_x == 0 and delta_a_y == 0 and delta_a_z == 0:
+            self.accum_a_x = 0
+            self.accum_a_y = 0
+            self.accum_a_z = 0
+        else:
+            self.accum_a_x += delta_a_x
+            self.accum_a_y += delta_a_y
+            self.accum_a_z += delta_a_z
+
+            delta_v_x = self.accum_a_x
+            delta_v_y = self.accum_a_y
+            delta_v_z = self.accum_a_y
+
+            self.accum_v_x += delta_v_x
+            self.accum_v_y += delta_v_y
+            self.accum_v_z += delta_v_z
+
+            _x = self.accum_v_x
+            _y = self.accum_v_y
+            _z = self.accum_v_z
+            # accumulate input
+            _new_mat = avango.gua.make_trans_mat(_x, _y, _z) * self.sf_mat.value
+
+            # possibly clamp matrix (to screen space borders)
+            _new_mat = self.clamp_matrix(_new_mat)
+
+            self.sf_mat.value = _new_mat # apply new matrix to field
 
     ## implement respective base-class function
     def reset(self):
