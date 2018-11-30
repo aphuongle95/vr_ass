@@ -193,13 +193,11 @@ class ManipulationManager(avango.script.Script):
     def object_dragging(self):
         # pass
         ## TODO: add code if necessary
-        self.hand_transform.WorldTransform.value.get_translate()
+        _hand_mat = self.hand_transform.WorldTransform.value.get_translate()
         for _node in self.dragged_objects_list:
-            translate_mat = _hand_mat.get_translate()
-            rot_mat = _node.Transform.value.get_rotate()
-            scale_mat = _node.Transform.value.get_scale()
-
-            _node.Transform.value = translate_mat * rot_mat * scale_mat
+            inv_trans_mat = avango.gua.make_inverse_mat(avango.gua.make_trans_mat(_node.Transform.value.get_translate()))
+            _node.Transform.value =  avango.gua.make_trans_mat(self.hand_transform.WorldTransform.value.get_translate()) * \
+                inv_trans_mat * _node.Transform.value
 
 
     ## This function is called when the dragging button
