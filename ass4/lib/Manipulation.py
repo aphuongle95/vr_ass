@@ -186,18 +186,18 @@ class ManipulationManager(avango.script.Script):
                 self.dragged_objects_list.append(_node) # add node for dragging
 
                 ## TODO: add code if necessary
-
+                _node.DraggingOffsetMatrix.value = avango.gua.make_inverse_mat(_hand_mat) * \
+                    _node.Transform.value
 
     ## This function is called while the dragging button
     ## (e.g. mouse button for isotonic input) is pressed
     def object_dragging(self):
         # pass
         ## TODO: add code if necessary
-        _hand_mat = self.hand_transform.WorldTransform.value.get_translate()
+        _hand_mat = self.hand_transform.WorldTransform.value
         for _node in self.dragged_objects_list:
             inv_trans_mat = avango.gua.make_inverse_mat(avango.gua.make_trans_mat(_node.Transform.value.get_translate()))
-            _node.Transform.value =  avango.gua.make_trans_mat(self.hand_transform.WorldTransform.value.get_translate()) * \
-                inv_trans_mat * _node.Transform.value
+            _node.Transform.value =  _hand_mat * _node.DraggingOffsetMatrix.value
 
 
     ## This function is called when the dragging button
