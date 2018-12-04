@@ -308,9 +308,6 @@ class ManipulationManager(avango.script.Script):
 
         self.lf_hand_mat = self.sf_hand_mat.value
 
-
-
-
 class Manipulation(avango.script.Script):
 
     ### input fields
@@ -385,6 +382,10 @@ class Manipulation(avango.script.Script):
 
 
 ### ISOTONIC DEVICE MAPPINGS ##
+"""
+Isotonic Mapping:
+Change in position of the mouse is mapped to the change in position/velocity/acceleration of the hand (object)
+"""
 
 class IsotonicPositionControlManipulation(Manipulation):
 
@@ -424,7 +425,15 @@ class IsotonicPositionControlManipulation(Manipulation):
 ##########################
 
 class IsotonicRateControlManipulation(Manipulation):
+    """
+    Let dt is change in time,
+    assume velocity at each time frame (from t to t+dt) is a constant
+    ds = v(t) * dt,
 
+    change in velocity (dv) is mapped from input,
+    we can calculate the accumulated velocity as followed:
+    v(t+dt) = v(t) + dv
+    """
     def my_constructor(self, MF_DOF, MF_BUTTONS):
         self.type = "isotonic-rate-control"
 
@@ -441,49 +450,37 @@ class IsotonicRateControlManipulation(Manipulation):
     ## implement respective base-class function
     def manipulate(self):
 
-        ## TODO: add code
-
-        # s2 = s1 + v_t * delta_t
-        # delta_t is a constant
-        # assume v_t at each time frame to be a constant
-        # v2 = v1 + delta_v
-        # delta_v is our input
-        # v_t is accumulated value of velocity
-
-        # if we move the mouse in a straight direction,
-        # it is easy to see that the velocity is increasing
-
-
-        #if self.mf_dof.value[0] or self.mf_dof.value[1] != 0 or self.mf_dof.value[2] != 0:
-            #print(self.mf_dof.value[0], self.mf_dof.value[1], self.mf_dof.value[2])
-
+        ## Done: add code
 
         self.last_time = self.current_time
         self.current_time = time.time()
-        self.delta_t = self.current_time - self.last_time
+        dt = self.current_time - self.last_time
 
-        delta_v_x = self.mf_dof.value[0] * 0.1
-        delta_v_y = self.mf_dof.value[1] * 0.1
-        delta_v_z = self.mf_dof.value[2] * 0.1
+        # dv consists of dv_x, dv_y, dv_z
+        dv_x = self.mf_dof.value[0] * 0.1
+        dv_y = self.mf_dof.value[1] * 0.1
+        dv_z = self.mf_dof.value[2] * 0.1
 
         """
-        if delta_v_x == 0 and delta_v_y == 0 and delta_v_z == 0:
+        if dv_x == 0 and dv_y == 0 and dv_z == 0:
             self.accum_v_x = 0
             self.accum_v_y = 0
             self.accum_v_z = 0
         else:
         """
 
-        self.accum_v_x += delta_v_x
-        self.accum_v_y += delta_v_y
-        self.accum_v_z += delta_v_z
+        # accumulated velocity
+        self.accum_v_x += dv_x
+        self.accum_v_y += dv_y
+        self.accum_v_z += dv_z
 
-        _x = self.accum_v_x * self.delta_t
-        _y = self.accum_v_y * self.delta_t
-        _z = self.accum_v_z * self.delta_t
+        # change in position
+        ds_x = self.accum_v_x * dt
+        ds_y = self.accum_v_y * dt
+        ds_z = self.accum_v_z * dt
 
         # accumulate input
-        _new_mat = avango.gua.make_trans_mat(_x, _y, _z) * self.sf_mat.value
+        _new_mat = avango.gua.make_trans_mat(ds_x, ds_y, ds_z) * self.sf_mat.value
 
         # possibly clamp matrix (to screen space borders)
         _new_mat = self.clamp_matrix(_new_mat)
@@ -493,8 +490,6 @@ class IsotonicRateControlManipulation(Manipulation):
     ## implement respective base-class function
     def reset(self):
 
-        ## TODO: add code
-
         self.sf_mat.value = avango.gua.make_identity_mat()
 
         self.accum_v_x = 0
@@ -503,7 +498,18 @@ class IsotonicRateControlManipulation(Manipulation):
 
 
 class IsotonicAccelerationControlManipulation(Manipulation):
+    """
+    Let da be change in acceleration, which is mapped from input,
+    accumulated acceleration is calculated as followed:
+    a(t+dt) = a(t) + da,
 
+    then, velocity at t+dt is
+    v(t+dt) = v(t) + a(t) * dt,
+
+    assume that acceleration from t to t+dt is a constant,
+    then, change in position is
+    ds = (v(t+dt) + v(t))/2 * dt
+    """
     def my_constructor(self, MF_DOF, MF_BUTTONS):
         self.type = "isotonic-acceleration-control"
 
@@ -515,6 +521,10 @@ class IsotonicAccelerationControlManipulation(Manipulation):
         self.accum_v_y = 0
         self.accum_v_z = 0
 
+        self.next_accum_v_x = 0
+        self.next_accum_v_y = 0
+        self.next_accum_v_z = 0
+
         self.accum_a_x = 0
         self.accum_a_y = 0
         self.accum_a_z = 0
@@ -523,33 +533,19 @@ class IsotonicAccelerationControlManipulation(Manipulation):
 
     ## implement respective base-class function
     def manipulate(self):
-        pass
-        ## TODO: add code
 
-        # s2 = s1 + v_t * delta_t
-        # delta_t is a constant
-        # v2 = v1 + delta_v
-        # v_t is accumulated value of velocity
-        # delta_v = a_t * delta_t
-        # assume a_t at each time frame to be a constant
-        # a2 = a1 + delta_a
-        # delta_a is our input
-        # a_t is accumulated value of acceleration
-
-        #if self.mf_dof.value[0] or self.mf_dof.value[1] != 0 or self.mf_dof.value[2] != 0:
-            #print(self.mf_dof.value[0], self.mf_dof.value[1], self.mf_dof.value[2])
-
+        ## Done: add code
 
         self.last_time = self.current_time
         self.current_time = time.time()
-        self.delta_t = self.current_time - self.last_time
+        dt = self.current_time - self.last_time
 
-        delta_a_x = self.mf_dof.value[0] * 0.1
-        delta_a_y = self.mf_dof.value[1] * 0.1
-        delta_a_z = self.mf_dof.value[2] * 0.1
+        da_x = self.mf_dof.value[0] * 0.1
+        da_y = self.mf_dof.value[1] * 0.1
+        da_z = self.mf_dof.value[2] * 0.1
 
         """
-        if delta_a_x == 0 and delta_a_y == 0 and delta_a_z == 0:
+        if da_x == 0 and da_y == 0 and da_z == 0:
             self.accum_a_x = 0
             self.accum_a_y = 0
             self.accum_a_z = 0
@@ -559,24 +555,28 @@ class IsotonicAccelerationControlManipulation(Manipulation):
             self.accum_v_z = 0
         else:
         """
-        self.accum_a_x += delta_a_x
-        self.accum_a_y += delta_a_y
-        self.accum_a_z += delta_a_z
+        self.accum_a_x += da_x
+        self.accum_a_y += da_y
+        self.accum_a_z += da_z
 
-        delta_v_x = self.accum_a_x * self.delta_t
-        delta_v_y = self.accum_a_y * self.delta_t
-        delta_v_z = self.accum_a_y * self.delta_t
+        dv_x = self.accum_a_x * dt
+        dv_y = self.accum_a_y * dt
+        dv_z = self.accum_a_y * dt
 
-        self.accum_v_x += delta_v_x
-        self.accum_v_y += delta_v_y
-        self.accum_v_z += delta_v_z
+        self.next_accum_v_x += dv_x
+        self.next_accum_v_y += dv_y
+        self.next_accum_v_z += dv_z
 
-        _x = self.accum_v_x * self.delta_t
-        _y = self.accum_v_y * self.delta_t
-        _z = self.accum_v_z * self.delta_t
+        ds_x = (self.accum_v_x + self.next_accum_v_x) / 2 * dt
+        ds_y = (self.accum_v_y + self.next_accum_v_y) / 2 * dt
+        ds_z = (self.accum_v_z + self.next_accum_v_z) / 2 * dt
+
+        self.accum_v_x = self.next_accum_v_x
+        self.accum_v_y = self.next_accum_v_y
+        self.accum_v_z = self.next_accum_v_z
 
         # accumulate input
-        _new_mat = avango.gua.make_trans_mat(_x, _y, _z) * self.sf_mat.value
+        _new_mat = avango.gua.make_trans_mat(ds_x, ds_y, ds_z) * self.sf_mat.value
 
         # possibly clamp matrix (to screen space borders)
         _new_mat = self.clamp_matrix(_new_mat)
@@ -586,7 +586,6 @@ class IsotonicAccelerationControlManipulation(Manipulation):
     ## implement respective base-class function
     def reset(self):
 
-        ## TODO: add code
         self.sf_mat.value = avango.gua.make_identity_mat()
 
         self.accum_v_x = 0
@@ -597,7 +596,11 @@ class IsotonicAccelerationControlManipulation(Manipulation):
         self.accum_a_y = 0
         self.accum_a_z = 0
 
-########################## End of Exercise 4.3
+        self.next_accum_v_x = 0
+        self.next_accum_v_y = 0
+        self.next_accum_v_z = 0
+
+########################## End of Exercise 4.2
 
 
 ##########################
@@ -605,6 +608,19 @@ class IsotonicAccelerationControlManipulation(Manipulation):
 ##########################
 
 ### ELASTIC DEVICE MAPPINGS ###
+"""
+Elastic Mapping:
+Device always goes back to the original position when user release it.
+The position/velocity/acceleration of the object is mapped to the position of device
+=> it will be 0 when device's position is at origin
+
+We map the value of input to value of position/velocity/acceleration directly
+(we dont accumulate the value here, because the input always represent an absolute value,
+while in isotonic control, the input represents a relative value)
+
+To make the translation more intutive,
+we map the direction of the spacemouse with the direction in the screen
+"""
 
 class ElasticPositionControlManipulation(Manipulation):
 
@@ -618,11 +634,12 @@ class ElasticPositionControlManipulation(Manipulation):
 
     ## implement respective base-class function
     def manipulate(self):
-        # pass
-        # TODO: add code
-        _x = self.mf_dof.value[2]
-        _y = self.mf_dof.value[0]
+
+        # Done: add code
+        _x = -self.mf_dof.value[0]
+        _y = self.mf_dof.value[2]
         _z = self.mf_dof.value[1]
+
         _rx = self.mf_dof.value[3]
         _ry = self.mf_dof.value[4]
         _rz = self.mf_dof.value[5]
@@ -645,7 +662,6 @@ class ElasticPositionControlManipulation(Manipulation):
     ## implement respective base-class function
     def reset(self):
 
-        # TODO: add code
         self.sf_mat.value =  self.sf_mat_origin_value # snap hand back to screen center
 
 
@@ -663,42 +679,28 @@ class ElasticRateControlManipulation(Manipulation):
         self.accum_v_z = 0
 
         self.current_time = time.time()
-        self.sf_mat_origin_value = self.sf_mat.value
 
     ## implement respective base-class function
     def manipulate(self):
-        # pass
-        # TODO: add code
 
-        # if self.mf_dof.value[0] or self.mf_dof.value[1] != 0 or self.mf_dof.value[2] != 0:
-        print(self.mf_dof.value[0], self.mf_dof.value[1], self.mf_dof.value[2])
+        # Done: add code
 
         self.last_time = self.current_time
         self.current_time = time.time()
-        self.delta_t = self.current_time - self.last_time
+        dt = self.current_time - self.last_time
 
-        delta_v_x = self.mf_dof.value[2] * 0.01
-        delta_v_y = self.mf_dof.value[0] * 0.01
-        delta_v_z = self.mf_dof.value[1] * 0.01
+        # input is mapped directly to velocity
+        v_x = -self.mf_dof.value[0] * 0.1
+        v_y = self.mf_dof.value[2] * 0.1
+        v_z = self.mf_dof.value[1] * 0.1
 
-        """
-        if delta_v_x == 0 and delta_v_y == 0 and delta_v_z == 0:
-            self.accum_v_x = 0
-            self.accum_v_y = 0
-            self.accum_v_z = 0
-        else:
-        """
-
-        self.accum_v_x += delta_v_x
-        self.accum_v_y += delta_v_y
-        self.accum_v_z += delta_v_z
-
-        _x = self.accum_v_x * self.delta_t
-        _y = self.accum_v_y * self.delta_t
-        _z = self.accum_v_z * self.delta_t
+        # change in position
+        ds_x = v_x * dt
+        ds_y = v_y * dt
+        ds_z = v_z * dt
 
         # accumulate input
-        _new_mat = avango.gua.make_trans_mat(_x, _y, _z) * self.sf_mat_origin_value
+        _new_mat = avango.gua.make_trans_mat(ds_x, ds_y, ds_z) * self.sf_mat.value
 
         # possibly clamp matrix (to screen space borders)
         _new_mat = self.clamp_matrix(_new_mat)
@@ -707,14 +709,8 @@ class ElasticRateControlManipulation(Manipulation):
 
     ## implement respective base-class function
     def reset(self):
+        pass
 
-        ## TODO: add code
-
-        self.sf_mat.value = self.sf_mat_origin_value
-
-        self.accum_v_x = 0
-        self.accum_v_y = 0
-        self.accum_v_z = 0
 
 class ElasticAccelerationControlManipulation(Manipulation):
 
@@ -725,23 +721,25 @@ class ElasticAccelerationControlManipulation(Manipulation):
         self.mf_dof.connect_from(MF_DOF)
         self.mf_buttons.connect_from(MF_BUTTONS)
 
+        self.next_accum_v_x = 0
+        self.next_accum_v_y = 0
+        self.next_accum_v_z = 0
+
         self.accum_v_x = 0
         self.accum_v_y = 0
         self.accum_v_z = 0
-
-        self.accum_a_x = 0
-        self.accum_a_y = 0
-        self.accum_a_z = 0
 
         self.current_time = time.time()
 
     ## implement respective base-class function
     def manipulate(self):
 
-        # TODO: add code
-        delta_a_x = self.mf_dof.value[2]  * 0.0001
-        delta_a_y = self.mf_dof.value[0]  * 0.0001
-        delta_a_z = self.mf_dof.value[1]  * 0.0001
+        # Done: add code
+
+        # input is mapped directly to the acceleration
+        a_x = -self.mf_dof.value[0]  * 0.1
+        a_y = self.mf_dof.value[2]  * 0.1
+        a_z = self.mf_dof.value[1]  * 0.1
 
         _rx = self.mf_dof.value[3]
         _ry = self.mf_dof.value[4]
@@ -749,38 +747,30 @@ class ElasticAccelerationControlManipulation(Manipulation):
 
         self.last_time = self.current_time
         self.current_time = time.time()
-        self.delta_t = self.current_time - self.last_time
+        dt = self.current_time - self.last_time
 
+        # change in velocity (assume acceleration is constant for a time frame)
+        dv_x = a_x * dt
+        dv_y = a_y * dt
+        dv_z = a_z * dt
 
-        """
-        if delta_a_x == 0 and delta_a_y == 0 and delta_a_z == 0:
-            self.accum_a_x = 0
-            self.accum_a_y = 0
-            self.accum_a_z = 0
+        # next accumulated velocity
 
-            self.accum_v_x = 0
-            self.accum_v_y = 0
-            self.accum_v_z = 0
-        else:
-        """
-        self.accum_a_x += delta_a_x
-        self.accum_a_y += delta_a_y
-        self.accum_a_z += delta_a_z
+        self.next_accum_v_x += dv_x
+        self.next_accum_v_y += dv_y
+        self.next_accum_v_z += dv_z
 
-        delta_v_x = self.accum_a_x * self.delta_t
-        delta_v_y = self.accum_a_y * self.delta_t
-        delta_v_z = self.accum_a_y * self.delta_t
+        # change in position
+        ds_x = (self.accum_v_x + self.next_accum_v_x) / 2 * dt
+        ds_y = (self.accum_v_y + self.next_accum_v_y) / 2 * dt
+        ds_z = (self.accum_v_z + self.next_accum_v_z) / 2 * dt
 
-        self.accum_v_x += delta_v_x
-        self.accum_v_y += delta_v_y
-        self.accum_v_z += delta_v_z
-
-        _x = self.accum_v_x * self.delta_t
-        _y = self.accum_v_y * self.delta_t
-        _z = self.accum_v_z * self.delta_t
+        self.accum_v_x = self.next_accum_v_x
+        self.accum_v_y = self.next_accum_v_y
+        self.accum_v_z = self.next_accum_v_z
 
         # accumulate input
-        _new_mat = avango.gua.make_trans_mat(_x, _y, _z) * self.sf_mat.value
+        _new_mat = avango.gua.make_trans_mat(ds_x, ds_y, ds_z) * self.sf_mat.value
 
         # possibly clamp matrix (to screen space borders)
         _new_mat = self.clamp_matrix(_new_mat)
@@ -790,15 +780,14 @@ class ElasticAccelerationControlManipulation(Manipulation):
     ## implement respective base-class function
     def reset(self):
 
-        ## TODO: add code
         self.sf_mat.value = avango.gua.make_identity_mat()
+
+        self.next_accum_v_x = 0
+        self.next_accum_v_y = 0
+        self.next_accum_v_z = 0
 
         self.accum_v_x = 0
         self.accum_v_y = 0
         self.accum_v_z = 0
 
-        self.accum_a_x = 0
-        self.accum_a_y = 0
-        self.accum_a_z = 0
-
-########################## End of Exercise 4.4
+########################## End of Exercise 4.3
