@@ -614,7 +614,7 @@ class ElasticPositionControlManipulation(Manipulation):
         # init field connections
         self.mf_dof.connect_from(MF_DOF)
         self.mf_buttons.connect_from(MF_BUTTONS)
-
+        self.sf_mat_origin_value = self.sf_mat.value
 
     ## implement respective base-class function
     def manipulate(self):
@@ -635,7 +635,7 @@ class ElasticPositionControlManipulation(Manipulation):
         _z *= 0.1
 
         # accumulate input
-        _new_mat = avango.gua.make_trans_mat(_x, _y, _z) * self.sf_mat.value
+        _new_mat = avango.gua.make_trans_mat(_x, _y, _z) * self.sf_mat_origin_value
 
         # possibly clamp matrix (to screen space borders)
         _new_mat = self.clamp_matrix(_new_mat)
@@ -644,9 +644,9 @@ class ElasticPositionControlManipulation(Manipulation):
 
     ## implement respective base-class function
     def reset(self):
-        pass
+
         # TODO: add code
-        self.sf_mat.value = avango.gua.make_identity_mat() # snap hand back to screen center
+        self.sf_mat.value =  self.sf_mat_origin_value # snap hand back to screen center
 
 
 class ElasticRateControlManipulation(Manipulation):
@@ -669,13 +669,16 @@ class ElasticRateControlManipulation(Manipulation):
         # pass
         # TODO: add code
 
+        # if self.mf_dof.value[0] or self.mf_dof.value[1] != 0 or self.mf_dof.value[2] != 0:
+        print(self.mf_dof.value[0], self.mf_dof.value[1], self.mf_dof.value[2])
+
         self.last_time = self.current_time
         self.current_time = time.time()
         self.delta_t = self.current_time - self.last_time
 
-        delta_v_x = self.mf_dof.value[2] * 0.1
-        delta_v_y = self.mf_dof.value[0] * 0.1
-        delta_v_z = self.mf_dof.value[1] * 0.1
+        delta_v_x = self.mf_dof.value[2] * 0.01
+        delta_v_y = self.mf_dof.value[0] * 0.01
+        delta_v_z = self.mf_dof.value[1] * 0.01
 
         """
         if delta_v_x == 0 and delta_v_y == 0 and delta_v_z == 0:
@@ -735,9 +738,9 @@ class ElasticAccelerationControlManipulation(Manipulation):
     def manipulate(self):
 
         # TODO: add code
-        delta_a_x = self.mf_dof.value[2]  * 0.1
-        delta_a_y = self.mf_dof.value[0]  * 0.1
-        delta_a_z = self.mf_dof.value[1]  * 0.1
+        delta_a_x = self.mf_dof.value[2]  * 0.0001
+        delta_a_y = self.mf_dof.value[0]  * 0.0001
+        delta_a_z = self.mf_dof.value[1]  * 0.0001
 
         _rx = self.mf_dof.value[3]
         _ry = self.mf_dof.value[4]
