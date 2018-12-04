@@ -663,6 +663,7 @@ class ElasticRateControlManipulation(Manipulation):
         self.accum_v_z = 0
 
         self.current_time = time.time()
+        self.sf_mat_origin_value = self.sf_mat.value
 
     ## implement respective base-class function
     def manipulate(self):
@@ -697,7 +698,7 @@ class ElasticRateControlManipulation(Manipulation):
         _z = self.accum_v_z * self.delta_t
 
         # accumulate input
-        _new_mat = avango.gua.make_trans_mat(_x, _y, _z) * self.sf_mat.value
+        _new_mat = avango.gua.make_trans_mat(_x, _y, _z) * self.sf_mat_origin_value
 
         # possibly clamp matrix (to screen space borders)
         _new_mat = self.clamp_matrix(_new_mat)
@@ -709,7 +710,7 @@ class ElasticRateControlManipulation(Manipulation):
 
         ## TODO: add code
 
-        self.sf_mat.value = avango.gua.make_identity_mat()
+        self.sf_mat.value = self.sf_mat_origin_value
 
         self.accum_v_x = 0
         self.accum_v_y = 0
