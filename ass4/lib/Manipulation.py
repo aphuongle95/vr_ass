@@ -186,7 +186,7 @@ class ManipulationManager(avango.script.Script):
                 _node.Material.value.set_uniform("Color", _node.CurrentColor.value) # switch to dragging material
                 self.dragged_objects_list.append(_node) # add node for dragging
 
-                ## TODO: add code if necessary
+                ## Done: add code if necessary
                 _node.DraggingOffsetMatrix.value = avango.gua.make_inverse_mat(_hand_mat) * \
                     _node.Transform.value
 
@@ -194,7 +194,7 @@ class ManipulationManager(avango.script.Script):
     ## (e.g. mouse button for isotonic input) is pressed
     def object_dragging(self):
         # pass
-        ## TODO: add code if necessary
+        ## Done: add code if necessary
         _hand_mat = self.hand_transform.WorldTransform.value
         for _node in self.dragged_objects_list:
             _node.Transform.value =  _hand_mat * _node.DraggingOffsetMatrix.value
@@ -210,7 +210,7 @@ class ManipulationManager(avango.script.Script):
 
         self.dragged_objects_list = [] # clear list
 
-        ## TODO: add code if necessary
+        ## Done: add code if necessary
 
 
     ########################## End of Exercise 4.2
