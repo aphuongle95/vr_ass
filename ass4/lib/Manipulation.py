@@ -6,6 +6,7 @@ import avango.gua
 import avango.script
 from avango.script import field_has_changed
 import avango.daemon
+import time
 
 ### import application libraries
 from lib.Device import MouseInput, BlueSpacemouseInput
@@ -129,42 +130,42 @@ class ManipulationManager(avango.script.Script):
 
         if self.manipulation_technique == 1: # isotonic position control
             self.IPCManipulation.enable_manipulation(True)
-
+            print("IPCManipulation")
             # init field connections
             self.sf_hand_mat.connect_from(self.IPCManipulation.sf_mat)
             self.sf_dragging_trigger.connect_from(self.IPCManipulation.sf_action_trigger)
 
         elif self.manipulation_technique == 2: # elastic position control
             self.EPCManipulation.enable_manipulation(True)
-
+            print("EPCManipulation")
             # init field connections
             self.sf_hand_mat.connect_from(self.EPCManipulation.sf_mat)
             self.sf_dragging_trigger.connect_from(self.EPCManipulation.sf_action_trigger)
 
         elif self.manipulation_technique == 3: # isotonic rate control
             self.IRCManipulation.enable_manipulation(True)
-
+            print("IRCManipulation")
             # init field connections
             self.sf_hand_mat.connect_from(self.IRCManipulation.sf_mat)
             self.sf_dragging_trigger.connect_from(self.IRCManipulation.sf_action_trigger)
 
         elif self.manipulation_technique == 4: # elastic rate control
             self.ERCManipulation.enable_manipulation(True)
-
+            print("ERCManipulation")
             # init field connections
             self.sf_hand_mat.connect_from(self.ERCManipulation.sf_mat)
             self.sf_dragging_trigger.connect_from(self.ERCManipulation.sf_action_trigger)
 
         elif self.manipulation_technique == 5: # isotonic acceleration control
             self.IACManipulation.enable_manipulation(True)
-
+            print("IACManipulation")
             # init field connections
             self.sf_hand_mat.connect_from(self.IACManipulation.sf_mat)
             self.sf_dragging_trigger.connect_from(self.IACManipulation.sf_action_trigger)
 
         elif self.manipulation_technique == 6: # elastic acceleration control
             self.EACManipulation.enable_manipulation(True)
-
+            print("EACManipulation")
             # init field connections
             self.sf_hand_mat.connect_from(self.EACManipulation.sf_mat)
             self.sf_dragging_trigger.connect_from(self.EACManipulation.sf_action_trigger)
@@ -434,10 +435,12 @@ class IsotonicRateControlManipulation(Manipulation):
         self.accum_v_x = 0
         self.accum_v_y = 0
         self.accum_v_z = 0
+        self.current_time = time.time()
+
 
     ## implement respective base-class function
     def manipulate(self):
-        pass
+        
         ## TODO: add code
 
         # s2 = s1 + v_t * delta_t
@@ -450,35 +453,52 @@ class IsotonicRateControlManipulation(Manipulation):
         # if we move the mouse in a straight direction,
         # it is easy to see that the velocity is increasing
 
-        delta_v_x = self.mf_dof.value[0] * 0.1 * 0.05
-        delta_v_y = self.mf_dof.value[1] * 0.1 * 0.05
-        delta_v_z = self.mf_dof.value[2] * 0.1 * 0.05
 
+        #if self.mf_dof.value[0] or self.mf_dof.value[1] != 0 or self.mf_dof.value[2] != 0:
+            #print(self.mf_dof.value[0], self.mf_dof.value[1], self.mf_dof.value[2])
+
+
+        self.last_time = self.current_time
+        self.current_time = time.time()
+        self.delta_t = self.current_time - self.last_time
+
+        delta_v_x = self.mf_dof.value[0] * 0.1 #* 0.05
+        delta_v_y = self.mf_dof.value[1] * 0.1 #* 0.05
+        delta_v_z = self.mf_dof.value[2] * 0.1 #* 0.05
+
+        """
         if delta_v_x == 0 and delta_v_y == 0 and delta_v_z == 0:
             self.accum_v_x = 0
             self.accum_v_y = 0
             self.accum_v_z = 0
         else:
-            self.accum_v_x += delta_v_x
-            self.accum_v_y += delta_v_y
-            self.accum_v_z += delta_v_z
+        """
 
-            _x = self.accum_v_x
-            _y = self.accum_v_y
-            _z = self.accum_v_z
-            # accumulate input
-            _new_mat = avango.gua.make_trans_mat(_x, _y, _z) * self.sf_mat.value
+        self.accum_v_x += delta_v_x
+        self.accum_v_y += delta_v_y
+        self.accum_v_z += delta_v_z
 
-            # possibly clamp matrix (to screen space borders)
-            _new_mat = self.clamp_matrix(_new_mat)
+        _x = self.accum_v_x * self.delta_t
+        _y = self.accum_v_y * self.delta_t
+        _z = self.accum_v_z * self.delta_t
 
-            self.sf_mat.value = _new_mat # apply new matrix to field
+        # accumulate input
+        _new_mat = avango.gua.make_trans_mat(_x, _y, _z) * self.sf_mat.value
+
+        # possibly clamp matrix (to screen space borders)
+        _new_mat = self.clamp_matrix(_new_mat)
+
+        self.sf_mat.value = _new_mat # apply new matrix to field
 
     ## implement respective base-class function
     def reset(self):
-        pass
+
         ## TODO: add code
+
         self.sf_mat.value = avango.gua.make_identity_mat()
+        self.accum_v_x = 0
+        self.accum_v_y = 0
+        self.accum_v_z = 0
 
 
 class IsotonicAccelerationControlManipulation(Manipulation):
