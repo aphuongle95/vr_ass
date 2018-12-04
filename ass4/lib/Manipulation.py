@@ -546,7 +546,7 @@ class IsotonicAccelerationControlManipulation(Manipulation):
 
         delta_a_x = self.mf_dof.value[0] * 0.1
         delta_a_y = self.mf_dof.value[1] * 0.1
-        delta_a_z = self.mf_dof.value[2] * 0.1 
+        delta_a_z = self.mf_dof.value[2] * 0.1
 
         """
         if delta_a_x == 0 and delta_a_y == 0 and delta_a_z == 0:
@@ -620,15 +620,15 @@ class ElasticPositionControlManipulation(Manipulation):
     def manipulate(self):
         # pass
         # TODO: add code
-        _x = -self.mf_dof.value[0]
-        _y = self.mf_dof.value[2]
+        _x = self.mf_dof.value[2]
+        _y = self.mf_dof.value[0]
         _z = self.mf_dof.value[1]
         _rx = self.mf_dof.value[3]
         _ry = self.mf_dof.value[4]
         _rz = self.mf_dof.value[5]
 
-        if _x!=0 or _y!=0 or _z!=0 or _rx!=0 or _ry!=0 or _rz!=0:
-            print("translate", _x,_y,_z, "rotate", _rx,_ry,_rz)
+        # if _x!=0 or _y!=0 or _z!=0 or _rx!=0 or _ry!=0 or _rz!=0:
+            # print("translate", _x,_y,_z, "rotate", _rx,_ry,_rz)
 
         _x *= 0.1
         _y *= 0.1
@@ -662,46 +662,55 @@ class ElasticRateControlManipulation(Manipulation):
         self.accum_v_y = 0
         self.accum_v_z = 0
 
+        self.current_time = time.time()
+
     ## implement respective base-class function
     def manipulate(self):
         # pass
         # TODO: add code
-        delta_v_x = -self.mf_dof.value[0]  * 0.1 * 0.05
-        delta_v_y = self.mf_dof.value[2]  * 0.1 * 0.05
-        delta_v_z = self.mf_dof.value[1]  * 0.1 * 0.05
 
-        _rx = self.mf_dof.value[3]
-        _ry = self.mf_dof.value[4]
-        _rz = self.mf_dof.value[5]
-        if delta_v_x!=0 or delta_v_y!=0 or delta_v_z!=0 or _rx!=0 or _ry!=0 or _rz!=0:
-            print("translate", delta_v_x,delta_v_y,delta_v_z, "rotate", _rx,_ry,_rz)
+        self.last_time = self.current_time
+        self.current_time = time.time()
+        self.delta_t = self.current_time - self.last_time
 
+        delta_v_x = self.mf_dof.value[2] * 0.1
+        delta_v_y = self.mf_dof.value[0] * 0.1
+        delta_v_z = self.mf_dof.value[1] * 0.1
+
+        """
         if delta_v_x == 0 and delta_v_y == 0 and delta_v_z == 0:
             self.accum_v_x = 0
             self.accum_v_y = 0
             self.accum_v_z = 0
         else:
-            self.accum_v_x += delta_v_x
-            self.accum_v_y += delta_v_y
-            self.accum_v_z += delta_v_z
+        """
 
-            _x = self.accum_v_x
-            _y = self.accum_v_y
-            _z = self.accum_v_z
-            # accumulate input
-            _new_mat = avango.gua.make_trans_mat(_x, _y, _z) * self.sf_mat.value
+        self.accum_v_x += delta_v_x
+        self.accum_v_y += delta_v_y
+        self.accum_v_z += delta_v_z
 
-            # possibly clamp matrix (to screen space borders)
-            _new_mat = self.clamp_matrix(_new_mat)
+        _x = self.accum_v_x * self.delta_t
+        _y = self.accum_v_y * self.delta_t
+        _z = self.accum_v_z * self.delta_t
 
-            self.sf_mat.value = _new_mat # apply new matrix to field
+        # accumulate input
+        _new_mat = avango.gua.make_trans_mat(_x, _y, _z) * self.sf_mat.value
 
+        # possibly clamp matrix (to screen space borders)
+        _new_mat = self.clamp_matrix(_new_mat)
+
+        self.sf_mat.value = _new_mat # apply new matrix to field
 
     ## implement respective base-class function
     def reset(self):
-        pass
-        # TODO: add code
+
+        ## TODO: add code
+
         self.sf_mat.value = avango.gua.make_identity_mat()
+
+        self.accum_v_x = 0
+        self.accum_v_y = 0
+        self.accum_v_z = 0
 
 class ElasticAccelerationControlManipulation(Manipulation):
 
@@ -720,21 +729,26 @@ class ElasticAccelerationControlManipulation(Manipulation):
         self.accum_a_y = 0
         self.accum_a_z = 0
 
+        self.current_time = time.time()
+
     ## implement respective base-class function
     def manipulate(self):
-        # pass
+
         # TODO: add code
-        delta_a_x = -self.mf_dof.value[0]  * 0.1 * 0.05 * 0.005
-        delta_a_y = self.mf_dof.value[2]  * 0.1 * 0.05 * 0.005
-        delta_a_z = self.mf_dof.value[1]  * 0.1 * 0.05 * 0.005
+        delta_a_x = self.mf_dof.value[2]  * 0.1
+        delta_a_y = self.mf_dof.value[0]  * 0.1
+        delta_a_z = self.mf_dof.value[1]  * 0.1
 
         _rx = self.mf_dof.value[3]
         _ry = self.mf_dof.value[4]
         _rz = self.mf_dof.value[5]
 
-        if delta_a_x!=0 or delta_a_y!=0 or delta_a_z!=0 or _rx!=0 or _ry!=0 or _rz!=0:
-            print("translate", delta_a_x,delta_a_y,delta_a_z, "rotate", _rx,_ry,_rz)
+        self.last_time = self.current_time
+        self.current_time = time.time()
+        self.delta_t = self.current_time - self.last_time
 
+
+        """
         if delta_a_x == 0 and delta_a_y == 0 and delta_a_z == 0:
             self.accum_a_x = 0
             self.accum_a_y = 0
@@ -744,32 +758,43 @@ class ElasticAccelerationControlManipulation(Manipulation):
             self.accum_v_y = 0
             self.accum_v_z = 0
         else:
-            self.accum_a_x += delta_a_x
-            self.accum_a_y += delta_a_y
-            self.accum_a_z += delta_a_z
+        """
+        self.accum_a_x += delta_a_x
+        self.accum_a_y += delta_a_y
+        self.accum_a_z += delta_a_z
 
-            delta_v_x = self.accum_a_x
-            delta_v_y = self.accum_a_y
-            delta_v_z = self.accum_a_y
+        delta_v_x = self.accum_a_x * self.delta_t
+        delta_v_y = self.accum_a_y * self.delta_t
+        delta_v_z = self.accum_a_y * self.delta_t
 
-            self.accum_v_x += delta_v_x
-            self.accum_v_y += delta_v_y
-            self.accum_v_z += delta_v_z
+        self.accum_v_x += delta_v_x
+        self.accum_v_y += delta_v_y
+        self.accum_v_z += delta_v_z
 
-            _x = self.accum_v_x
-            _y = self.accum_v_y
-            _z = self.accum_v_z
-            # accumulate input
-            _new_mat = avango.gua.make_trans_mat(_x, _y, _z) * self.sf_mat.value
+        _x = self.accum_v_x * self.delta_t
+        _y = self.accum_v_y * self.delta_t
+        _z = self.accum_v_z * self.delta_t
 
-            # possibly clamp matrix (to screen space borders)
-            _new_mat = self.clamp_matrix(_new_mat)
+        # accumulate input
+        _new_mat = avango.gua.make_trans_mat(_x, _y, _z) * self.sf_mat.value
 
-            self.sf_mat.value = _new_mat # apply new matrix to field
+        # possibly clamp matrix (to screen space borders)
+        _new_mat = self.clamp_matrix(_new_mat)
+
+        self.sf_mat.value = _new_mat # apply new matrix to field
+
     ## implement respective base-class function
     def reset(self):
-        # pass
-        # TODO: add code
+
+        ## TODO: add code
         self.sf_mat.value = avango.gua.make_identity_mat()
+
+        self.accum_v_x = 0
+        self.accum_v_y = 0
+        self.accum_v_z = 0
+
+        self.accum_a_x = 0
+        self.accum_a_y = 0
+        self.accum_a_z = 0
 
 ########################## End of Exercise 4.4
