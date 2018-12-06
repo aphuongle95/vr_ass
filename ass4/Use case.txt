@@ -1,0 +1,42 @@
+1.Isotonic Position Control
+
+The computer mouse is an use case of Isotonic Position Control. When we move the mouse on the table, the pointer on the screen will move accordingly. When the mouse stops, the pointer also stops.
+
+--------------------------------------------------------
+2.Isotonic Rate Control
+
+DJ manipulates records on a turntable by moving the record with their hand to cue the stylus to exact points on a record, and by touching or moving the platter or record to stop, slow down, speed up or, spin the record backwards, or moving the turntable platter back and forth, the DJ can create new mix.
+
+https://en.wikipedia.org/wiki/Turntablism
+
+Easier control of DJ Turntable: Pitch control, slide the controller to speed up / slow down the song.
+
+https://www.google.de/url?https://controlthemixdj.com/wp-content/uploads/2018/01/f18b887fd14d239a96e9bc594f0664b2-the-button-turntable-2.jpg
+
+--------------------------------------------------------
+3.Isotonic Acceleration Control 
+
+"The Wii Remote is the primary controller for the console. It uses a combination of built-in accelerometers and infrared detection to sense its position in 3D space when pointed at the LEDs in the Sensor Bar. This design allows users to control the game with physical gestures as well as button-presses."
+https://en.wikipedia.org/wiki/Wii
+
+Wii can be applied in 3D tennis game. When the user can control the racket to hit the ball, the ball will bounce back and get accelerated (and with the gravity acceleration). If there's no other force applied on the ball, it will get accelerated until it touches another surface.
+
+--------------------------------------------------------
+4.Elastic Position Control
+
+The High Striker that is often seen at carnivals can be a good example of Elastic Position Control. By transforming player's force to the position of the mark on the tower bar, player have feedback about their input force. In order to win, they need to try harder to make the mark to the top.
+https://en.wikipedia.org/wiki/High_striker
+
+--------------------------------------------------------
+5.Elastic Rate Control 
+
+Motorbike throttle is a real example of Elastic Rate Control, the more we twist the throttle, the faster the vehicle moves. When we release the throttle, the vehicle will stop.
+
+--------------------------------------------------------
+6.Elastic Acceleration Control
+
+Gas / Break Pedal of Car are real world's example of Elastic Acceleration Control. When you step on them, the car will accelerate / decelerate accordingly. It will move with a constant speed (theoretically - without air / road surface friction) if we release the pedals.
+
+Driving Simulator input try to mimic the real scenario by controlling player's acceleration to increase or decrease the velocity of the car (in this case the rate of changing the scene) 
+
+

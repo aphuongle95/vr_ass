@@ -709,7 +709,7 @@ class ElasticRateControlManipulation(Manipulation):
 
     ## implement respective base-class function
     def reset(self):
-        pass
+        self.sf_mat.value = avango.gua.make_identity_mat() # snap hand back to screen center
 
 
 class ElasticAccelerationControlManipulation(Manipulation):
