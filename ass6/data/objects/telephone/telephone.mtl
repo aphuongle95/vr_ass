@@ -1,0 +1,166 @@
+# 
+# Wavefront material file
+# Converted by the DEEP Exploration  Deep Exploration 5 5.0.0.1399 Release
+# Right Hemisphere, LTD
+# http://www.righthemisphere.com/
+# 
+
+newmtl F6004BOL
+Ka 0 0 0
+Kd 0.839216 0.823529 0.776471
+Ks 1 1 1
+illum 2
+Ns 32
+
+
+newmtl F6004TEL
+Ka 0 0 0
+Kd 0.839216 0.823529 0.776471
+Ks 1 1 1
+illum 2
+Ns 32
+
+
+newmtl F6004TES
+Ka 0 0 0
+Kd 0.839216 0.823529 0.776471
+Ks 1 1 1
+illum 2
+Ns 32
+ 
+
+newmtl F6004FOR
+Ka 0 0 0
+Kd 0.839216 0.823529 0.776471
+Ks 1 1 1
+illum 2
+Ns 32
+
+
+newmtl F6004TEL1
+Ka 0 0 0
+Kd 0.839216 0.823529 0.776471
+Ks 1 1 1
+illum 2
+Ns 32
+
+
+newmtl F6004BLA
+Ka 0.0980392 0.0980392 0.0980392
+Kd 1 1 1
+Ks 0.898039 0.898039 0.898039
+illum 2
+Ns 32
+
+
+newmtl F6004BON
+Ka 0 0 0
+Kd 0.164706 0.152941 0.129412
+Ks 1 1 1
+illum 2
+Ns 2.14355
+
+
+newmtl F6004CAB
+Ka 0 0 0
+Kd 0.839216 0.823529 0.776471
+Ks 1 1 1
+illum 2
+Ns 2.14355
+
+
+newmtl F6004BO6
+Ka 0 0 0
+Kd 0.839216 0.823529 0.776471
+Ks 1 1 1
+illum 2
+Ns 2048
+
+
+newmtl F6004BO1
+Ka 0 0 0
+Kd 0.839216 0.823529 0.776471
+Ks 1 1 1
+illum 2
+Ns 2048
+
+
+newmtl F6004BO2
+Ka 0 0 0
+Kd 0.839216 0.823529 0.776471
+Ks 1 1 1
+illum 2
+Ns 2048
+
+
+newmtl F6004BO4
+Ka 0 0 0
+Kd 0.839216 0.823529 0.776471
+Ks 1 1 1
+illum 2
+Ns 2048
+
+
+newmtl F6004BSI
+Ka 0 0 0
+Kd 0.839216 0.823529 0.776471
+Ks 1 1 1
+illum 2
+Ns 2048
+
+
+newmtl F6004BO3
+Ka 0 0 0
+Kd 0.839216 0.823529 0.776471
+Ks 1 1 1
+illum 2
+Ns 2048
+
+
+newmtl F6004BO0
+Ka 0 0 0
+Kd 0.839216 0.823529 0.776471
+Ks 1 1 1
+illum 2
+Ns 2048
+
+
+newmtl F6004BO7
+Ka 0 0 0
+Kd 0.839216 0.823529 0.776471
+Ks 1 1 1
+illum 2
+Ns 2048
+
+
+newmtl F6004BO5
+Ka 0 0 0
+Kd 0.839216 0.823529 0.776471
+Ks 1 1 1
+illum 2
+Ns 2048
+
+
+newmtl F6004BO9
+Ka 0 0 0
+Kd 0.839216 0.823529 0.776471
+Ks 1 1 1
+illum 2
+Ns 2048
+
+
+newmtl F6004BO8
+Ka 0 0 0
+Kd 0.839216 0.823529 0.776471
+Ks 1 1 1
+illum 2
+Ns 2048
+
+
+newmtl F6004BAS
+Ka 0 0 0
+Kd 0.839216 0.823529 0.776471
+Ks 1 1 1
+illum 2
+Ns 2048
+

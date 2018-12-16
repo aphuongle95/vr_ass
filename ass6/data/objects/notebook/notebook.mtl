@@ -1,0 +1,63 @@
+# 
+# Wavefront material file
+# Converted by the DEEP Exploration  Deep Exploration 5 5.0.0.1399 Release
+# Right Hemisphere, LTD
+# http://www.righthemisphere.com/
+# 
+
+newmtl ____Default
+Ka 0.137255 0.137255 0.137255
+Kd 0.137255 0.137255 0.137255
+Ks 1 1 1
+illum 2
+Ns 630.346
+
+
+newmtl Material__14
+Ka 0.933333 0.933333 0.933333
+Kd 0.933333 0.933333 0.933333
+Ks 0.898039 0.898039 0.898039
+illum 2
+Ns 294.067
+
+
+newmtl Material__4
+Ka 0.894118 0.894118 0.894118
+Kd 0.894118 0.894118 0.894118
+Ks 0.898039 0.898039 0.898039
+illum 2
+Ns 724.077
+
+
+newmtl Material__6
+Ka 0.584314 0.584314 0.584314
+Kd 0.584314 0.584314 0.584314
+Ks 0.898039 0.898039 0.898039
+illum 2
+Ns 4
+
+
+newmtl Material__11
+Ka 0.196078 0.196078 0.196078
+Kd 0.196078 0.196078 0.196078
+Ks 1 1 1
+illum 2
+Ns 630.346
+
+
+newmtl Material__5
+Ka 0.968628 0.968628 0.968628
+Kd 0.968628 0.968628 0.968628
+Ks 0.898039 0.898039 0.898039
+illum 2
+Ns 2
+
+
+newmtl Material__7
+Ka 0.584314 0.584314 0.584314
+Kd 0.584314 0.584314 0.584314
+Ks 0.898039 0.898039 0.898039
+illum 2
+Ns 4
+
+

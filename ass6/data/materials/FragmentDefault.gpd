@@ -1,0 +1,26 @@
+{
+  "name" : "FragmentDefault",
+  "source" : "
+  
+   
+    void FragmentDefault() {
+      if (enable_color_override == 1){
+         gua_color = mix(gua_color, vec3(override_color.xyz), override_color.w);
+      }
+
+    }
+  ",
+  "uniforms" :
+  [
+    {
+      "name" : "enable_color_override",
+      "type" : "bool",
+      "value" : "0"
+    },
+    {
+      "name" : "override_color",
+      "type" : "vec4",
+      "value" : "(0.5 0.5 0.5, 0.5)"
+    }    
+  ]
+}

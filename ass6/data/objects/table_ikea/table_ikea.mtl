@@ -1,0 +1,42 @@
+# 
+# Wavefront material file
+# Converted by the DEEP Exploration  Deep Exploration 5 5.0.0.1399 Release
+# Right Hemisphere, LTD
+# http://www.righthemisphere.com/
+# 
+
+newmtl ________
+Ka 0 0 0
+Kd 0.309804 0.309804 0.309804
+Ks 0.662745 0.662745 0.662745
+d 0.999
+illum 2
+Ns 50.0
+
+
+newmtl Croco_Black_Skin
+Ka 0 0 0
+Kd 0.996078 0.964706 0.886275
+Ks 0.0862745 0.0862745 0.0862745
+d 0.999
+illum 2
+Ns 50.0
+
+
+newmtl chrome081
+Ka 0 0 0
+Kd 0.811765 0.811765 0.811765
+Ks 0.690196 0.690196 0.690196
+d 0.999
+illum 2
+Ns 50.0
+
+
+newmtl w__2
+Ka 0 0 0
+Kd 0.737255 0.678431 0.501961
+Ks 0.156863 0.156863 0.156863
+d 0.999
+illum 2
+Ns 50.0
+
