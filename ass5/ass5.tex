@@ -39,7 +39,7 @@ A.translate=\begin{bmatrix}
     0 & 0 & 0 & 1
   \end{bmatrix}
 $$
-$$Z = distance = sqrt(x^2 + y^2 + z^2)$$
+$$Z = distance = sqrt(tx^2 + ty^2 + tz^2)$$
 \\\\Let's attach intersection2 node as a child of intersection node, which represents new coordinate system and pointer2 node as a child of intersection2 node, which represents pointer in this new coordinate system.
 We need to calculate transform matrix of intersection2 node.
 $$M = i2.T$$
@@ -49,15 +49,15 @@ As requirement, local transform of pointer2 represents -z-translation of the poi
 $$=> P = p2.T = \begin{bmatrix}
     1 & 0 & 0 & 0 \\
     0 & 1 & 0 & 0 \\
-    0 & 0 & 1 & 0 \\
-    0 & 0 & 0 & -Z
+    0 & 0 & 1 & -Z \\
+    0 & 0 & 0 & 1
   \end{bmatrix}$$
 Putting it together,
 $$i.T * M * P = n.T * p.T$$
 $$=> M = inv(i.T) * n.T * p.T * inv(P)$$
 
 \subsection*{c)}
-delta is the transform of current frame pointer in relation to last frame pointer.
+delta is the transform matrix of current frame pointer in relation to last frame pointer.
 
 \subsection*{d)}
 Model transform of wheel1\_geom 
@@ -68,40 +68,38 @@ Model View transform of wheel1\_geom
 $$w1^S = inv(s.T) * inv(n.T) * cycle\_trans.T * wheel1\_trans.T * wheel1\_geom$$
 
 \section*{Exercise 5.2}
+First, scale the screen, then rotate and translate.\\
 Transformations matrix for front screen 
-$$s1.T = trans(0,0,-2) * scale(4,2,1)$$
+$$s1.T = trans(0,1,-2) * scale(4,2,1)$$
 Transformations matrix for left screen 
-$$s2.T = trans(0,0,-2) * scale(4,2,1) * rot(90, y)$$
+$$s2.T = trans(-2,1,0) * rot(90, y) * scale(4,2,1)$$
 Transformations matrix for right screen 
-$$s3.T = trans(0,0,-2) * scale(4,2,1) * rot(-90, y)$$
+$$s3.T = trans(2,1,0) * rot(-90, y) * scale(4,2,1)$$
 
 \section*{Exercise 5.3}
-As stated in slide 15 in stereoscopic viewing lecture, maximal positive disparity is equal to eye distance.\\\\
-Depth resolution, depth levels behind the screen is number of pixels corresponding to eye distance.\\
-$$depth\:level = screen\:resolution / screen\:width * eye\:distance$$
-$$=> depth\:level = 2560 / 400 * 6.5 $$
-$$=> depth\:level = 41$$
+As stated in slide 15 in stereoscopic viewing lecture, maximal positive disparity is equal to eye distance, hence, for this set up the maximal positive disparity is 0.065 m and 41 pixel (2560 / 400 * 6.5).\\\\
+From the maximum disparity in pixels, we derive the number of depth levels is 41 levels .
 
 \section*{Exercise 5.4}
-Refer to slide 18 in viewing setup lecture, we can summeraize the parameters given as followed:
+Refer to slide 18 in viewing setup lecture, we can summerize the parameters given as followed:
 $$d = 2m$$
 $$o_x = 0.7m$$
 $$o_y = 1.75m$$
 $$w = 4m$$
 $$h = 2m$$
 $$z_{near} = 0.05m$$
-$$z_{far} = 0.05m$$
-We calculate boundaries of viewing window in the $z_{near}$ plane as followed:
+$$z_{far} = 100m$$
+We calculate left and right boundaries of viewing window in the $z_{near}$ plane as followed:
 $$\frac{l}{o_x-w/2} = \frac{z_{near}}{d}$$
 $$=>\frac{l}{0.7-2} = \frac{0.05}{2}$$
-$$=>l = -0.0325$$
+$$=>l = -0.0325$$\\
 $$\frac{r}{o_x+w/2} = \frac{z_{near}}{d}$$
 $$=>\frac{r}{0.7+2} = \frac{0.05}{2}$$
 $$=>r = 0.0675$$
-Similarly, we calculate boundaries of viewing window in the $z_{far}$ plane as followed:
+Similarly, we calculate left and right boundaries of viewing window in the $z_{far}$ plane as followed:
 $$\frac{l}{-o_x-w/2} = \frac{z_{far}}{d}$$
 $$=>\frac{l}{-0.7-2} = \frac{100}{2}$$
-$$=>l = -135$$
+$$=>l = -135$$\\
 $$\frac{r}{-o_x+w/2} = \frac{z_{far}}{d}$$
 $$=>\frac{r}{-0.7+2} = \frac{100}{2}$$
 $$=>r = 65$$
