@@ -407,6 +407,8 @@ class DepthRay(ManipulationTechnique):
         self.depth_marker_size = 0.03
         self.marker_point_size = 0.03 # in meter
         self.marker_distance = 0
+        self.selected_nodes = []
+        self.intersect_results = []
 
         ### resources ###
 
@@ -460,40 +462,59 @@ class DepthRay(ManipulationTechnique):
     def selection(self):
         if len(self.mf_pick_result.value) > 0: # intersection found
             closet_distance = self.ray_length
-            for pick_result in self.mf_pick_result.value:
+            pick_index = 0
+            self.intersect_results = []
+
+            # find the closet object to the marker
+            for i in range(len(self.mf_pick_result.value)):
+                pick_result = self.mf_pick_result.value[i]
                 pick_distance = pick_result.Distance.value * self.ray_length
                 pick_marker_distance = abs(pick_distance - self.marker_distance)
                 if pick_marker_distance < closet_distance:
                     closet_distance = pick_marker_distance
                     self.pick_result = pick_result
+                    pick_index = i
                 print("pick_distance", pick_distance)
                 print("marker_distance", self.marker_distance)
+
+            # save objects intersected to a list
+            for i in range(len(self.mf_pick_result.value)):
+                if i != pick_index:
+                    self.intersect_results.append(self.mf_pick_result.value[i])
 
         else: # nothing hit
             self.pick_result = None
 
+        ## disable previous nodes highlighting
+        if len(self.selected_nodes) > 0:
+            for selected_node in self.selected_nodes:
+                for _child_node in selected_node.Children.value:
+                    if _child_node.get_type() == 'av::gua::TriMeshNode':
+                        _child_node.Material.value.set_uniform("enable_color_override", False)
+        self.selected_nodes = []
 
-        ## disable previous node highlighting
-        if self.selected_node is not None:
-            for _child_node in self.selected_node.Children.value:
-                if _child_node.get_type() == 'av::gua::TriMeshNode':
-                    _child_node.Material.value.set_uniform("enable_color_override", False)
+        # hightlight picked object
+        if self.pick_result is not None:
+            self.hightlight(self.pick_result,"red")
 
+        # highlight intersected objects
+        if len(self.intersect_results) > 0:
+            for intersect_result in self.intersect_results:
+                self.hightlight(intersect_result,"green")
 
-        if self.pick_result is not None: # something was hit
-            self.selected_node = self.pick_result.Object.value # get intersected geometry node
-            self.selected_node = self.selected_node.Parent.value # take the parent node of the geomtry node (the whole object)
-
-        else:
-            self.selected_node = None
-
-
+    def hightlight(self, hightlight_node, color):
+        print("highlighting", color)
+        selected_node = hightlight_node.Object.value # get intersected geometry node
+        selected_node = selected_node.Parent.value # take the parent node of the geomtry node (the whole object)
         ## enable node highlighting
-        if self.selected_node is not None:
-            for _child_node in self.selected_node.Children.value:
-                if _child_node.get_type() == 'av::gua::TriMeshNode':
-                    _child_node.Material.value.set_uniform("enable_color_override", True)
+        for _child_node in selected_node.Children.value:
+            if _child_node.get_type() == 'av::gua::TriMeshNode':
+                _child_node.Material.value.set_uniform("enable_color_override", True)
+                if color == "red":
                     _child_node.Material.value.set_uniform("override_color", avango.gua.Vec4(1.0,0.0,0.0,0.3)) # 30% color override
+                if color == "green":
+                    _child_node.Material.value.set_uniform("override_color", avango.gua.Vec4(0.0,1.0,0.0,0.3))
+        self.selected_nodes.append(selected_node)
 
 class GoGo(ManipulationTechnique):
 
