@@ -6,6 +6,7 @@ import avango.gua
 import avango.script
 from avango.script import field_has_changed
 import avango.daemon
+import matplotlib.pyplot as plt
 
 ### import python libraries ###
 import math
@@ -566,6 +567,8 @@ class GoGo(ManipulationTechnique):
         y_n1 = d_max
         self.linear_para = self.linear_transfer_function(x_l0,x_l1,y_l0,y_l1)
         self.noniso_para = self.nonisomorphic_function(x_n0,x_n1,y_n0,y_n1)
+        self.plot_transfer_function(c_min, c_max, self.linear_para, self.noniso_para)
+
         ### resources ###
 
         ## To-Do: init (geometry) nodes here
@@ -603,18 +606,29 @@ class GoGo(ManipulationTechnique):
         y = trans[1] # - 0.10
         z = trans[2] # - 0.35
 
-        if(z>self.z_threshold):
-            #linear
-            (a,b) = self.linear_para
-            z2 = a * z + b
-        else:
-            #non-iso
-            (a,b,c) = self.noniso_para
-            z2 = a * z * z + b * z + c
+        z2 = self.transfer_function(z, self.linear_para, self.noniso_para)
+
         self.hand_geometry.Transform.value = \
             avango.gua.make_inverse_mat(avango.gua.make_trans_mat(trans)) * \
             avango.gua.make_trans_mat(x, y, z2) * \
             self.hand_rot_scale_mat
+
+    def plot_transfer_function(self, x0, x1, linear_para, noniso_para):
+        x_data = [x*0.5 for x in range(int(x0), int(x1))]
+        y_data = [self.transfer_function(x, linear_para, noniso_para) for x in x_data]
+        plt.scatter(x_data, y_data)
+        plt.show()
+
+    def transfer_function(self, x, linear_para, noniso_para):
+        if(x>self.z_threshold):
+            #linear
+            (a,b) = self.linear_para
+            y = a * x + b
+        else:
+            #non-iso
+            (a,b,c) = self.noniso_para
+            y = a * x * x + b * x + c
+        return y
 
     def linear_transfer_function(self, x0, y0, x1, y1):
         # linear transfer function looks like this: y = a*x + b
