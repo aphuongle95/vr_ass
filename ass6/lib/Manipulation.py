@@ -445,6 +445,8 @@ class DepthRay(ManipulationTechnique):
             return
         roll_angle = ManipulationTechnique.get_roll_angle(self, self.pointer_node.Transform.value)
         roll_angle += 180
+
+        # TODO??? is this correct
         self.marker_distance = roll_angle / 360 * self.ray_length * 0.5
         ## To-Do: implement depth ray technique here
         self.maker_geometry.Transform.value = \
@@ -542,35 +544,12 @@ class GoGo(ManipulationTechnique):
         self.intersection_point_size = 0.03 # in meter
         self.gogo_threshold = 0.35 # in meter
 
-        self.half_arm = 0.35
-        self.scene_length = 5
-
-        # z reach :
-        # for control
-        c_min = 1.75
-        c_max = 0.4
-        # for display
-        d_min = 0
-        d_max = -5
-
-        # for transfer function
-        # linear :
-        x_l0 = c_min
-        x_l1 = c_min - self.half_arm
-        self.z_threshold = x_l1
-        y_l0 = d_min
-        y_l1 = d_min - self.half_arm
-        # non-isomophic
-        x_n0 = c_min - self.half_arm
-        x_n1 = c_max
-        y_n0 = d_min - self.half_arm
-        y_n1 = d_max
-        self.linear_para = self.linear_transfer_function(x_l0,x_l1,y_l0,y_l1)
-        self.noniso_para = self.nonisomorphic_function(x_n0,x_n1,y_n0,y_n1)
-        self.plot_transfer_function(c_min, c_max, self.linear_para, self.noniso_para)
+        # self.plot_transfer_function(c_min, c_max, self.linear_para, self.noniso_para)
 
         ### resources ###
 
+        # TODO??? quadratic transfer function above threshold? max and min value in virtual world?
+        # TODO maybe some initial offset for hand transform
         ## To-Do: init (geometry) nodes here
         ## init hand geometry
         _loader = avango.gua.nodes.TriMeshLoader() # init trimesh loader to load external meshes
@@ -591,7 +570,6 @@ class GoGo(ManipulationTechnique):
         self.enable(False)
 
 
-
     ### callback functions ###
     def evaluate(self): # implement respective base-class function
         if self.enable_flag == False:
@@ -599,18 +577,16 @@ class GoGo(ManipulationTechnique):
 
         ## To-Do: implement Go-Go technique here
         # get pointer node translation
-        trans = self.pointer_node.WorldTransform.value.get_translate()
+        trans = self.pointer_node.Transform.value.get_translate()
         print(trans)
 
-        x = trans[0] # + 0.07
-        y = trans[1] # - 0.10
-        z = trans[2] # - 0.35
-
-        z2 = self.transfer_function(z, self.linear_para, self.noniso_para)
+        trans2 = [self.transfer_function(x) for x in trans]
+        x2 = trans2[0]
+        y2 = trans2[1]
+        z2 = trans2[2]
 
         self.hand_geometry.Transform.value = \
-            avango.gua.make_inverse_mat(avango.gua.make_trans_mat(trans)) * \
-            avango.gua.make_trans_mat(x, y, z2) * \
+            avango.gua.make_trans_mat(x2-x, y2-x, z2-z) * \
             self.hand_rot_scale_mat
 
     def plot_transfer_function(self, x0, x1, linear_para, noniso_para):
@@ -619,35 +595,15 @@ class GoGo(ManipulationTechnique):
         plt.scatter(x_data, y_data)
         plt.show()
 
-    def transfer_function(self, x, linear_para, noniso_para):
-        if(x>self.z_threshold):
+    def transfer_function(self, x):
+        d = self.gogo_threshold
+        if(x<d):
             #linear
-            (a,b) = self.linear_para
-            y = a * x + b
+            return x
         else:
             #non-iso
-            (a,b,c) = self.noniso_para
-            y = a * x * x + b * x + c
-        return y
-
-    def linear_transfer_function(self, x0, y0, x1, y1):
-        # linear transfer function looks like this: y = a*x + b
-        # to calculate a,b
-        # a = (y1 - y0) / (x1 - x0)
-        # b = y0 - ax0
-        a = (y1 - y0) / (x1 - x0)
-        b = y0 - a*x0
-        return (a,b)
-
-    def nonisomorphic_function(self, x0, y0, x1, y1):
-        # lets this function to be quadratic function: y = a*x*x + bx + c
-        # to calculate a,b,c
-        # first y = a * (x-x0)^2 + y0
-        # a = (y1-y0)/(x1-x0)^2
-        a = (y1-y0)/((x1-x0) * (x1-x0))
-        b = -2 * a * x0
-        c = a*x0*x0 + y0
-        return (a,b,c)
+            k = 10
+            return x + k * (x-d) * (x-d)
 
 class VirtualHand(ManipulationTechnique):
 
