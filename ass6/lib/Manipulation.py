@@ -474,8 +474,8 @@ class DepthRay(ManipulationTechnique):
                     closet_distance = pick_marker_distance
                     self.pick_result = pick_result
                     pick_index = i
-                print("pick_distance", pick_distance)
-                print("marker_distance", self.marker_distance)
+                #print("pick_distance", pick_distance)
+                #print("marker_distance", self.marker_distance)
 
             # save objects intersected to a list
             for i in range(len(self.mf_pick_result.value)):
@@ -503,7 +503,7 @@ class DepthRay(ManipulationTechnique):
                 self.hightlight(intersect_result,"green")
 
     def hightlight(self, hightlight_node, color):
-        print("highlighting", color)
+        #print("highlighting", color)
         selected_node = hightlight_node.Object.value # get intersected geometry node
         selected_node = selected_node.Parent.value # take the parent node of the geomtry node (the whole object)
         ## enable node highlighting
@@ -541,10 +541,48 @@ class GoGo(ManipulationTechnique):
         self.intersection_point_size = 0.03 # in meter
         self.gogo_threshold = 0.35 # in meter
 
+        self.half_arm = 0.35
+        self.scene_length = 5
 
+        # z reach :
+        # for control
+        c_min = 1.75
+        c_max = 0.4
+        # for display
+        d_min = 0
+        d_max = -5
+
+        # for transfer function
+        # linear :
+        x_l0 = c_min
+        x_l1 = c_min - self.half_arm
+        self.z_threshold = x_l1
+        y_l0 = d_min
+        y_l1 = d_min - self.half_arm
+        # non-isomophic
+        x_n0 = c_min - self.half_arm
+        x_n1 = c_max
+        y_n0 = d_min - self.half_arm
+        y_n1 = d_max
+        self.linear_para = self.linear_transfer_function(x_l0,x_l1,y_l0,y_l1)
+        self.noniso_para = self.nonisomorphic_function(x_n0,x_n1,y_n0,y_n1)
         ### resources ###
 
         ## To-Do: init (geometry) nodes here
+        ## init hand geometry
+        _loader = avango.gua.nodes.TriMeshLoader() # init trimesh loader to load external meshes
+
+        self.hand_geometry = _loader.create_geometry_from_file("hand_geometry", "data/objects/hand.obj", avango.gua.LoaderFlags.DEFAULTS)
+        self.hand_rot_scale_mat = \
+            avango.gua.make_rot_mat(90.0,1,0,0) * \
+            avango.gua.make_scale_mat(0.6)
+            # avango.gua.make_trans_mat(0,0,-0.5) * \
+        self.hand_geometry.Transform.value = \
+            self.hand_rot_scale_mat
+        self.hand_geometry.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.86, 0.54, 1.0))
+        self.hand_geometry.Material.value.set_uniform("Emissivity", 0.9)
+        self.hand_geometry.Material.value.set_uniform("Metalness", 0.1)
+        self.pointer_node.Children.value.append(self.hand_geometry)
 
         ### set initial states ###
         self.enable(False)
@@ -557,8 +595,45 @@ class GoGo(ManipulationTechnique):
             return
 
         ## To-Do: implement Go-Go technique here
+        # get pointer node translation
+        trans = self.pointer_node.WorldTransform.value.get_translate()
+        print(trans)
 
+        x = trans[0] # + 0.07
+        y = trans[1] # - 0.10
+        z = trans[2] # - 0.35
 
+        if(z>self.z_threshold):
+            #linear
+            (a,b) = self.linear_para
+            z2 = a * z + b
+        else:
+            #non-iso
+            (a,b,c) = self.noniso_para
+            z2 = a * z * z + b * z + c
+        self.hand_geometry.Transform.value = \
+            avango.gua.make_inverse_mat(avango.gua.make_trans_mat(trans)) * \
+            avango.gua.make_trans_mat(x, y, z2) * \
+            self.hand_rot_scale_mat
+
+    def linear_transfer_function(self, x0, y0, x1, y1):
+        # linear transfer function looks like this: y = a*x + b
+        # to calculate a,b
+        # a = (y1 - y0) / (x1 - x0)
+        # b = y0 - ax0
+        a = (y1 - y0) / (x1 - x0)
+        b = y0 - a*x0
+        return (a,b)
+
+    def nonisomorphic_function(self, x0, y0, x1, y1):
+        # lets this function to be quadratic function: y = a*x*x + bx + c
+        # to calculate a,b,c
+        # first y = a * (x-x0)^2 + y0
+        # a = (y1-y0)/(x1-x0)^2
+        a = (y1-y0)/((x1-x0) * (x1-x0))
+        b = -2 * a * x0
+        c = a*x0*x0 + y0
+        return (a,b,c)
 
 class VirtualHand(ManipulationTechnique):
 
