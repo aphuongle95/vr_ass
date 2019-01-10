@@ -580,13 +580,20 @@ class GoGo(ManipulationTechnique):
         trans = self.pointer_node.Transform.value.get_translate()
         print(trans)
 
+        # calculate translation for hand object
         trans2 = [self.transfer_function(x) for x in trans]
+
+        x = trans[0]
+        y = trans[1]
+        z = trans[2]
         x2 = trans2[0]
         y2 = trans2[1]
         z2 = trans2[2]
 
+        # update the transform value
+        # take node that hand_geometry is child of pointer node
         self.hand_geometry.Transform.value = \
-            avango.gua.make_trans_mat(x2-x, y2-x, z2-z) * \
+            avango.gua.make_trans_mat(x2-x, y2-y, z2-z) * \
             self.hand_rot_scale_mat
 
     def plot_transfer_function(self, x0, x1, linear_para, noniso_para):
@@ -627,19 +634,103 @@ class VirtualHand(ManipulationTechnique):
         self.min_vel = 0.01 / 60.0 # in meter/sec
         self.sc_vel = 0.15 / 60.0 # in meter/sec
         self.max_vel = 0.25 / 60.0 # in meter/sec
-
+        self.last_time = time.time()
+        self.last_pointer_translation = self.pointer_node.Transform.value.get_translate()
 
         ### resources ###
 
         ## To-Do: init (geometry) nodes here
+        _loader = avango.gua.nodes.TriMeshLoader() # init trimesh loader to load external meshes
+
+        self.hand_geometry = _loader.create_geometry_from_file("hand_geometry", "data/objects/hand.obj", avango.gua.LoaderFlags.DEFAULTS)
+        self.hand_rot_scale_mat = \
+            avango.gua.make_rot_mat(90.0,1,0,0) * \
+            avango.gua.make_scale_mat(0.6)
+            # avango.gua.make_trans_mat(0,0,-0.5) * \
+        self.hand_geometry.Transform.value = \
+            self.hand_rot_scale_mat
+        self.hand_geometry.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.86, 0.54, 1.0))
+        self.hand_geometry.Material.value.set_uniform("Emissivity", 0.9)
+        self.hand_geometry.Material.value.set_uniform("Metalness", 0.1)
+        self.pointer_node.Children.value.append(self.hand_geometry)
 
         ### set initial states ###
         self.enable(False)
 
+    def transfer_function(self, hand_speed, hand_distance, hand_coordinate, object_coordinate):
+        # return the new object's coordinate
+        v = hand_speed
+        T_h = hand_distance
+        # T_o is the translation distance of manipulated object
+        mins = self.min_vel
+        sc = self.sc_vel
+        maxs = self.max_vel
+        offset = 1.7
+
+        if(v<=mins):
+            # no movement due to unintended motion
+            return object_coordinate
+        else:
+            # calculate k = C/D Ratio
+            if(v<=sc):
+                # small movement in virtual world
+                k = (v-sc)*(offset-1)/(mins-sc) + 1
+                T_o = 1/k * T_h
+                return object_coordinate + T_o
+            else if(v<=maxs):
+                # 1 to 1 movement in virtual world
+                k = 1
+                T_o = T_h
+                return object_coordinate + T_o
+            else:
+                # align virtual hand with real hand
+                return hand_coordinate
 
     ### callback functions ###
     def evaluate(self): # implement respective base-class function
         if self.enable_flag == False:
             return
 
+        # time
+        t = time.time()
+        dt = t - self.last_time
+        self.last_time = t
+
         ## To-Do: implement Virtual Hand (with PRISM filter) technique here
+
+        # get pointers and hand translation
+
+        # get translation of pointer and hand object
+        pointer_trans = self.pointer_node.Transform.value.get_translate()
+        hand_trans = self.hand_geometry.Transform.value.get_translate()
+
+        # loop through x, y, z and calculate new x, y, z for hand using transfer_function
+        for i in len(range(3)):
+
+            # coordinate, distance and velocity
+            x = pointer_trans[i]
+            d = x - self.last_pointer_translation[i]
+            v = d / dt
+            h = hand_trans[i]
+
+            # calculate new translation using transfer_function
+            trans2.append(self.transfer_function(hand_speed = v,
+                                                 hand_distance = d,
+                                                 hand_coordinate = x,
+                                                 object_coordinate = h))
+
+        # update last_pointer_translation for next evaluation
+        self.last_pointer_translation = pointer_trans
+
+        # update the transform value
+        # take node that hand_geometry is child of pointer node
+        x = pointer_trans[0]
+        y = pointer_trans[1]
+        z = pointer_trans[2]
+        x2 = trans2[0]
+        y2 = trans2[1]
+        z2 = trans2[2]
+
+        self.hand_geometry.Transform.value = \
+            avango.gua.make_trans_mat(x2-x, y2-y, z2-z) * \
+            self.hand_rot_scale_mat
