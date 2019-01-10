@@ -222,8 +222,8 @@ class ManipulationTechnique(avango.script.Script):
         # update ray parameters
         self.ray.Origin.value = PICK_MAT.get_translate()
 
-        _vec = avango.gua.make_rot_mat(PICK_MAT.get_rotate_scale_corrected()) * avango.gua.Vec3(0.0,0.0,-1.0)
-        _vec = avango.gua.Vec3(_vec.x,_vec.y,_vec.z)
+        _vec = avango.gua.make_rot_mat(PICK_MAT.get_rotate_scale_corrected()) * avango.gua.Vec3(0.0,0.0,-1.0) #?
+        _vec = avango.gua.Vec3(_vec.x,_vec.y,_vec.z) #?
 
         self.ray.Direction.value = _vec * PICK_LENGTH
 
@@ -406,7 +406,7 @@ class DepthRay(ManipulationTechnique):
         self.ray_thickness = 0.01 # in meter
         self.depth_marker_size = 0.03
         self.marker_point_size = 0.03 # in meter
-        self.roll_angle = 0
+        self.marker_distance = 0
 
         ### resources ###
 
@@ -441,14 +441,59 @@ class DepthRay(ManipulationTechnique):
         if self.enable_flag == False:
             return
         roll_angle = ManipulationTechnique.get_roll_angle(self, self.pointer_node.Transform.value)
-        print(roll_angle) # maximum ray length = 2.5m
         roll_angle += 180
+        self.marker_distance = roll_angle / 360 * self.ray_length * 0.5
         ## To-Do: implement depth ray technique here
         self.maker_geometry.Transform.value = \
-            avango.gua.make_trans_mat(0.0,0.0, roll_angle / 360 * 2.5 * -0.5) * \
+            avango.gua.make_trans_mat(0.0,0.0, self.marker_distance * -1.0) * \
             avango.gua.make_scale_mat(self.marker_point_size)
 
+        ## calc ray intersection
+        ManipulationTechnique.update_intersection(self, PICK_MAT = self.pointer_node.WorldTransform.value, PICK_LENGTH = self.ray_length) # call base-class function
 
+        ## update object selection
+        self.selection() # call base-class function
+
+        ## possibly perform object dragging
+        ManipulationTechnique.dragging(self) # call base-class function
+
+    def selection(self):
+        if len(self.mf_pick_result.value) > 0: # intersection found
+            closet_distance = self.ray_length
+            for pick_result in self.mf_pick_result.value:
+                pick_distance = pick_result.Distance.value * self.ray_length
+                pick_marker_distance = abs(pick_distance - self.marker_distance)
+                if pick_marker_distance < closet_distance:
+                    closet_distance = pick_marker_distance
+                    self.pick_result = pick_result
+                print("pick_distance", pick_distance)
+                print("marker_distance", self.marker_distance)
+
+        else: # nothing hit
+            self.pick_result = None
+
+
+        ## disable previous node highlighting
+        if self.selected_node is not None:
+            for _child_node in self.selected_node.Children.value:
+                if _child_node.get_type() == 'av::gua::TriMeshNode':
+                    _child_node.Material.value.set_uniform("enable_color_override", False)
+
+
+        if self.pick_result is not None: # something was hit
+            self.selected_node = self.pick_result.Object.value # get intersected geometry node
+            self.selected_node = self.selected_node.Parent.value # take the parent node of the geomtry node (the whole object)
+
+        else:
+            self.selected_node = None
+
+
+        ## enable node highlighting
+        if self.selected_node is not None:
+            for _child_node in self.selected_node.Children.value:
+                if _child_node.get_type() == 'av::gua::TriMeshNode':
+                    _child_node.Material.value.set_uniform("enable_color_override", True)
+                    _child_node.Material.value.set_uniform("override_color", avango.gua.Vec4(1.0,0.0,0.0,0.3)) # 30% color override
 
 class GoGo(ManipulationTechnique):
 
