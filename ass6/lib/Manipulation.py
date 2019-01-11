@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 ### import python libraries ###
 import math
 import sys
-
+import time
 
 class ManipulationManager(avango.script.Script):
 
@@ -541,8 +541,8 @@ class GoGo(ManipulationTechnique):
 
 
         ### parameters ###
-        self.intersection_point_size = 0.03 # in meter
-        self.gogo_threshold = 0.35 # in meter
+        self.intersection_point_size = 0.35 # in meter
+        self.gogo_threshold = 0.1 # in meter
 
         # self.plot_transfer_function(c_min, c_max, self.linear_para, self.noniso_para)
 
@@ -561,13 +561,23 @@ class GoGo(ManipulationTechnique):
             # avango.gua.make_trans_mat(0,0,-0.5) * \
         self.hand_geometry.Transform.value = \
             self.hand_rot_scale_mat
-        self.hand_geometry.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.86, 0.54, 1.0))
+        # self.hand_geometry.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.86, 0.54, 1.0))
         self.hand_geometry.Material.value.set_uniform("Emissivity", 0.9)
         self.hand_geometry.Material.value.set_uniform("Metalness", 0.1)
         self.pointer_node.Children.value.append(self.hand_geometry)
 
         ### set initial states ###
         self.enable(False)
+
+    def set_hightlight(self, selected_node, is_highlight):
+        ## disable previous node highlighting
+        if(is_highlight):
+            if selected_node.get_type() == 'av::gua::TriMeshNode':
+                    selected_node.Material.value.set_uniform("enable_color_override", True)
+                    selected_node.Material.value.set_uniform("override_color", avango.gua.Vec4(1.0, 0.86, 0.54, 1.0)) 
+        else:
+            if selected_node.get_type() == 'av::gua::TriMeshNode':
+                    selected_node.Material.value.set_uniform("enable_color_override", False)
 
 
     ### callback functions ###
@@ -577,23 +587,25 @@ class GoGo(ManipulationTechnique):
 
         ## To-Do: implement Go-Go technique here
         # get pointer node translation
-        trans = self.pointer_node.Transform.value.get_translate()
-        print(trans)
+        pointer_trans = self.pointer_node.Transform.value.get_translate()
+        head_trans = self.HEAD_NODE.Transform.value.get_translate()
+        pointer_head_trans = pointer_trans-head_trans
+        R_r = pointer_head_trans
 
         # calculate translation for hand object
-        trans2 = [self.transfer_function(x) for x in trans]
+        R_rx = R_r[0]
+        R_ry = R_r[1]
+        R_rz = R_r[2]
+        (R_vx,is_amp1) = self.transfer_function(R_rx)
+        # no y-direction amplification
+        (R_vz,is_amp2) = self.transfer_function(R_rz)
+        is_amp = True if is_amp1 and is_amp2 else False
 
-        x = trans[0]
-        y = trans[1]
-        z = trans[2]
-        x2 = trans2[0]
-        y2 = trans2[1]
-        z2 = trans2[2]
-
+        self.set_hightlight(self.hand_geometry, is_amp)
         # update the transform value
         # take node that hand_geometry is child of pointer node
         self.hand_geometry.Transform.value = \
-            avango.gua.make_trans_mat(x2-x, y2-y, z2-z) * \
+            avango.gua.make_trans_mat(R_vx-R_rx, 0, R_vz-R_rz) * \
             self.hand_rot_scale_mat
 
     def plot_transfer_function(self, x0, x1, linear_para, noniso_para):
@@ -603,14 +615,17 @@ class GoGo(ManipulationTechnique):
         plt.show()
 
     def transfer_function(self, x):
+        x1 = abs(x)
         d = self.gogo_threshold
-        if(x<d):
+        if(x1<d):
             #linear
-            return x
+            return (x, False)
         else:
             #non-iso
-            k = 10
-            return x + k * (x-d) * (x-d)
+            k = 5
+            x2 = x1 + k * (x1-d) * (x1-d)
+            x2 = -x2 if x<0 else x2
+            return (x2, True)
 
 class VirtualHand(ManipulationTechnique):
 
@@ -677,7 +692,7 @@ class VirtualHand(ManipulationTechnique):
                 k = (v-sc)*(offset-1)/(mins-sc) + 1
                 T_o = 1/k * T_h
                 return object_coordinate + T_o
-            else if(v<=maxs):
+            elif(v<=maxs):
                 # 1 to 1 movement in virtual world
                 k = 1
                 T_o = T_h
