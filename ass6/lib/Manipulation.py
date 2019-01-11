@@ -519,6 +519,8 @@ class DepthRay(ManipulationTechnique):
                     _child_node.Material.value.set_uniform("override_color", avango.gua.Vec4(0.0,1.0,0.0,0.3))
         self.selected_nodes.append(selected_node)
 
+
+
 class GoGo(ManipulationTechnique):
 
     ## constructor
@@ -627,6 +629,8 @@ class GoGo(ManipulationTechnique):
             x2 = -x2 if x<0 else x2
             return (x2, True)
 
+
+
 class VirtualHand(ManipulationTechnique):
 
     ## constructor
@@ -660,22 +664,22 @@ class VirtualHand(ManipulationTechnique):
 
         # hand geometry
         self.hand_geometry = _loader.create_geometry_from_file("hand_geometry", "data/objects/hand.obj", avango.gua.LoaderFlags.DEFAULTS)
-        # avango.gua.make_rot_mat(90.0,1,0,0) * \
+
         self.hand_scale_mat = \
             avango.gua.make_scale_mat(0.5)
-            # avango.gua.make_trans_mat(0,0,-0.5) * \
+
         self.hand_geometry.Transform.value = \
             self.hand_scale_mat
         self.hand_geometry.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.86, 0.54, 1.0))
-        # self.hand_geometry.Material.value.set_uniform("Emissivity", 0.9)
-        # self.hand_geometry.Material.value.set_uniform("Metalness", 0.1)
+
         self.pointer_node.Children.value.append(self.hand_geometry)
 
         # ball geometry
         self.ball_geometry = _loader.create_geometry_from_file("intersection_geometry", "data/objects/sphere.obj", avango.gua.LoaderFlags.DEFAULTS)
-        # avango.gua.make_trans_mat(0,0,0) * \
+
         self.ball_geometry.Transform.value = \
             avango.gua.make_scale_mat(self.ball_point_size)
+
         self.ball_geometry.Material.value.set_uniform("Color", avango.gua.Vec4(1.0,0.0,0.0,1.0))
         self.pointer_node.Children.value.append(self.ball_geometry)
 
@@ -692,6 +696,11 @@ class VirtualHand(ManipulationTechnique):
         maxs = self.max_vel
         offset = 1.7
 
+        print("v",v)
+        print("T_h",T_h)
+        print("hand_coordinate")
+        print("ball_coordinate")
+        print()
 
         if(v<=mins):
             print("v<=mins")
@@ -704,12 +713,14 @@ class VirtualHand(ManipulationTechnique):
                 # small movement in virtual world
                 k = (v-sc)*(offset-1)/(mins-sc) + 1
                 T_o = 1/k * T_h
+                print("T_o",T_o)
                 return hand_coordinate + T_o
             elif(v<=maxs):
                 print("v<=maxs")
                 # 1 to 1 movement in virtual world
                 k = 1
                 T_o = T_h
+                print("T_o",T_o)
                 return hand_coordinate + T_o
             else:
                 print("v>maxs")
@@ -761,11 +772,11 @@ class VirtualHand(ManipulationTechnique):
         x = pointer_trans[0]
         y = pointer_trans[1]
         z = pointer_trans[2]
-        print("pointer: ",x,y,z)
+        # print("pointer: ",x,y,z)
         x2 = hand_trans2[0]
         y2 = hand_trans2[1]
         z2 = hand_trans2[2]
-        print("hand: ", x2,y2,z2)
+        # print("hand: ", x2,y2,z2)
 
         self.hand_geometry.WorldTransform.value = \
             avango.gua.make_trans_mat(x2-x, y2-y, z2-z) * \
