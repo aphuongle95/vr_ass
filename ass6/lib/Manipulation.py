@@ -555,12 +555,12 @@ class GoGo(ManipulationTechnique):
         _loader = avango.gua.nodes.TriMeshLoader() # init trimesh loader to load external meshes
 
         self.hand_geometry = _loader.create_geometry_from_file("hand_geometry", "data/objects/hand.obj", avango.gua.LoaderFlags.DEFAULTS)
-        self.hand_rot_scale_mat = \
+        self.hand_scale_mat = \
             avango.gua.make_rot_mat(90.0,1,0,0) * \
             avango.gua.make_scale_mat(0.6)
             # avango.gua.make_trans_mat(0,0,-0.5) * \
         self.hand_geometry.Transform.value = \
-            self.hand_rot_scale_mat
+            self.hand_scale_mat
         # self.hand_geometry.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.86, 0.54, 1.0))
         self.hand_geometry.Material.value.set_uniform("Emissivity", 0.9)
         self.hand_geometry.Material.value.set_uniform("Metalness", 0.1)
@@ -574,7 +574,7 @@ class GoGo(ManipulationTechnique):
         if(is_highlight):
             if selected_node.get_type() == 'av::gua::TriMeshNode':
                     selected_node.Material.value.set_uniform("enable_color_override", True)
-                    selected_node.Material.value.set_uniform("override_color", avango.gua.Vec4(1.0, 0.86, 0.54, 1.0)) 
+                    selected_node.Material.value.set_uniform("override_color", avango.gua.Vec4(1.0, 0.86, 0.54, 1.0))
         else:
             if selected_node.get_type() == 'av::gua::TriMeshNode':
                     selected_node.Material.value.set_uniform("enable_color_override", False)
@@ -606,7 +606,7 @@ class GoGo(ManipulationTechnique):
         # take node that hand_geometry is child of pointer node
         self.hand_geometry.Transform.value = \
             avango.gua.make_trans_mat(R_vx-R_rx, 0, R_vz-R_rz) * \
-            self.hand_rot_scale_mat
+            self.hand_scale_mat
 
     def plot_transfer_function(self, x0, x1, linear_para, noniso_para):
         x_data = [x*0.5 for x in range(int(x0), int(x1))]
@@ -645,6 +645,7 @@ class VirtualHand(ManipulationTechnique):
 
         ### parameters ###
         self.intersection_point_size = 0.03 # in meter
+        self.ball_point_size = 0.007
 
         self.min_vel = 0.01 / 60.0 # in meter/sec
         self.sc_vel = 0.15 / 60.0 # in meter/sec
@@ -657,49 +658,63 @@ class VirtualHand(ManipulationTechnique):
         ## To-Do: init (geometry) nodes here
         _loader = avango.gua.nodes.TriMeshLoader() # init trimesh loader to load external meshes
 
+        # hand geometry
         self.hand_geometry = _loader.create_geometry_from_file("hand_geometry", "data/objects/hand.obj", avango.gua.LoaderFlags.DEFAULTS)
-        self.hand_rot_scale_mat = \
-            avango.gua.make_rot_mat(90.0,1,0,0) * \
-            avango.gua.make_scale_mat(0.6)
+        # avango.gua.make_rot_mat(90.0,1,0,0) * \
+        self.hand_scale_mat = \
+            avango.gua.make_scale_mat(0.5)
             # avango.gua.make_trans_mat(0,0,-0.5) * \
         self.hand_geometry.Transform.value = \
-            self.hand_rot_scale_mat
+            self.hand_scale_mat
         self.hand_geometry.Material.value.set_uniform("Color", avango.gua.Vec4(1.0, 0.86, 0.54, 1.0))
-        self.hand_geometry.Material.value.set_uniform("Emissivity", 0.9)
-        self.hand_geometry.Material.value.set_uniform("Metalness", 0.1)
+        # self.hand_geometry.Material.value.set_uniform("Emissivity", 0.9)
+        # self.hand_geometry.Material.value.set_uniform("Metalness", 0.1)
         self.pointer_node.Children.value.append(self.hand_geometry)
+
+        # ball geometry
+        self.ball_geometry = _loader.create_geometry_from_file("intersection_geometry", "data/objects/sphere.obj", avango.gua.LoaderFlags.DEFAULTS)
+        # avango.gua.make_trans_mat(0,0,0) * \
+        self.ball_geometry.Transform.value = \
+            avango.gua.make_scale_mat(self.ball_point_size)
+        self.ball_geometry.Material.value.set_uniform("Color", avango.gua.Vec4(1.0,0.0,0.0,1.0))
+        self.pointer_node.Children.value.append(self.ball_geometry)
 
         ### set initial states ###
         self.enable(False)
 
-    def transfer_function(self, hand_speed, hand_distance, hand_coordinate, object_coordinate):
-        # return the new object's coordinate
-        v = hand_speed
-        T_h = hand_distance
+    def transfer_function(self, ball_speed, ball_distance, ball_coordinate, hand_coordinate):
+        # return the new virtual hand's coordinate
+        v = abs(ball_speed)
+        T_h = ball_distance
         # T_o is the translation distance of manipulated object
         mins = self.min_vel
         sc = self.sc_vel
         maxs = self.max_vel
         offset = 1.7
 
+
         if(v<=mins):
+            print("v<=mins")
             # no movement due to unintended motion
-            return object_coordinate
+            return hand_coordinate
         else:
             # calculate k = C/D Ratio
             if(v<=sc):
+                print("v<=sc")
                 # small movement in virtual world
                 k = (v-sc)*(offset-1)/(mins-sc) + 1
                 T_o = 1/k * T_h
-                return object_coordinate + T_o
+                return hand_coordinate + T_o
             elif(v<=maxs):
+                print("v<=maxs")
                 # 1 to 1 movement in virtual world
                 k = 1
                 T_o = T_h
-                return object_coordinate + T_o
+                return hand_coordinate + T_o
             else:
+                print("v>maxs")
                 # align virtual hand with real hand
-                return hand_coordinate
+                return ball_coordinate
 
     ### callback functions ###
     def evaluate(self): # implement respective base-class function
@@ -716,12 +731,16 @@ class VirtualHand(ManipulationTechnique):
         # get pointers and hand translation
 
         # get translation of pointer and hand object
-        pointer_trans = self.pointer_node.Transform.value.get_translate()
-        hand_trans = self.hand_geometry.Transform.value.get_translate()
+        pointer_trans = self.pointer_node.WorldTransform.value.get_translate()
+        hand_trans = self.hand_geometry.WorldTransform.value.get_translate()
+        x1 = hand_trans[0]
+        y1 = hand_trans[1]
+        z1 = hand_trans[2]
 
         # loop through x, y, z and calculate new x, y, z for hand using transfer_function
-        for i in len(range(3)):
+        hand_trans2 = []
 
+        for i in range(3):
             # coordinate, distance and velocity
             x = pointer_trans[i]
             d = x - self.last_pointer_translation[i]
@@ -729,10 +748,10 @@ class VirtualHand(ManipulationTechnique):
             h = hand_trans[i]
 
             # calculate new translation using transfer_function
-            trans2.append(self.transfer_function(hand_speed = v,
-                                                 hand_distance = d,
-                                                 hand_coordinate = x,
-                                                 object_coordinate = h))
+            hand_trans2.append(self.transfer_function(ball_speed = v,
+                                                 ball_distance = d,
+                                                 ball_coordinate = x,
+                                                 hand_coordinate = h))
 
         # update last_pointer_translation for next evaluation
         self.last_pointer_translation = pointer_trans
@@ -742,10 +761,13 @@ class VirtualHand(ManipulationTechnique):
         x = pointer_trans[0]
         y = pointer_trans[1]
         z = pointer_trans[2]
-        x2 = trans2[0]
-        y2 = trans2[1]
-        z2 = trans2[2]
+        print("pointer: ",x,y,z)
+        x2 = hand_trans2[0]
+        y2 = hand_trans2[1]
+        z2 = hand_trans2[2]
+        print("hand: ", x2,y2,z2)
 
-        self.hand_geometry.Transform.value = \
+        self.hand_geometry.WorldTransform.value = \
             avango.gua.make_trans_mat(x2-x, y2-y, z2-z) * \
-            self.hand_rot_scale_mat
+            self.pointer_node.WorldTransform.value * \
+            self.hand_scale_mat
